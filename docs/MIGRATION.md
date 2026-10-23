@@ -1,6 +1,6 @@
-# 第一批迁移：来源、版本与双宿主接线
+# 迁移记录：来源、版本与双宿主接线（第一批 + 第二批）
 
-状态（2026-10-23）：**本地可交付，未发布 npm，未打 tag。** 包版本统一 `0.1.0`，npm scope 暂定 `@rine-kit/*`（需 Arthur 确认并注册该 scope，见「阻碍」）。
+状态（2026-10-23）：第一批已在 origin/main（`3cc5bdf`）；第二批在 `claude/active`，待确认合并。**未发布 npm，未打 tag。** 包版本统一 `0.1.0`，npm scope 暂定 `@rine-kit/*`（需 Arthur 确认并注册该 scope，见「阻碍」）。
 
 ## 包与来源（Extract Don't Rewrite）
 
@@ -18,9 +18,30 @@
 
 与 Lab 现有包的差异（prettier 规范化后比对）：`presentation` 完全一致；`pubg-domain` 仅 fixture 格式差异；`agent-memory` 仅多出 `context/` 与 `scheduler.ts` 一处 `let runId` 的类型声明。结论：kit 是 Lab 的超集，Lab 可无损切换。
 
-## 暂未迁移（第二批候选）
+## 第二批（11 个包全部在 kit）
 
-`pubg-intelligence`（含 `gate-api` / 归档 / 回填，需先梳理 Gate 残留）、`agent-memory-plugin`、`pubg-plugin`（均为 plugin-sdk 之上的薄适配，RINE 目前独占）、`agent-core`（Vercel AI SDK Agent，Lab 用 OpenClaw，不会双宿主复用）。
+同样逐文件取自 RINE `main@104a687`，源码与测试不改；仅改包名、元数据与 tsconfig。
+
+| 包 | 来源 | 说明 |
+|----|------|------|
+| `@rine-kit/pubg-intelligence` | Lab `packages/pubg-intelligence`（与 RINE 副本格式规范化后零差异，Lab 最近提交 `b730c370`） | 战斗/节奏/战术/风格/高光/赛局叙事/研究/评测/原始 Telemetry 归档；入口 `.`、`./archive`、`./backfill` |
+| `@rine-kit/agent-memory-plugin` | RINE | agent-memory 接到 plugin-sdk 宿主：remember/correct/forget 工具 + recall/observe hook |
+| `@rine-kit/pubg-plugin` | RINE | pubg-tools 目录包装成 plugin-sdk 插件（OpenClaw 宿主继续用自己的薄适配，不依赖本包） |
+| `@rine-kit/agent-core` | RINE | Vercel AI SDK 推理循环（OpenAI 兼容端点、插件工具、文本/语音共用 turn）。Lab 不使用，也不要求 Lab 采用 AI SDK |
+
+### Gate 残留处理
+- **不迁入** `src/gate-api.ts`、`src/gate.ts`、`tests/gate-api.test.ts` 及 `./gate` 导出（`GATE_PUBG_INTELLIGENCE_*`、`summarizeGateCachedFeatures`）。理由：只有冻结的 Gate（Lab `apps/pubg-saas`）消费，RINE 无消费者；Gate 只作历史源码，不进公共包。该函数本身是只依赖 `pubg-domain` 类型的纯函数，没有 Gate 运行时依赖，所以处理方式是**把源码留在 Gate 侧**：切换时拷到 `apps/pubg-saas/src/application/gate-intelligence-api.ts`（试验已验证）。
+- kit 内其余模块无 Gate 引用（`promotionGate` 是评测指标名，与 Gate 产品无关）。`scripts/` 的两个 CLI 用环境变量取路径，不随包发布。
+- `pubg-intelligence` 测试数 106 → 103（少 3 个 gate-api 测试，随源码留在 Gate 侧）。
+- `agent-core` / `agent-memory-plugin` 沿用 RINE 的类型检查严格度（未开 `exactOptionalPropertyTypes`），避免为此改源码。
+
+### 第二批双宿主注意点
+RINE：删除全部 11 个本地包（只剩 `apps/*` 与 `shared`）；全仓类型检查通过，测试全绿（desktop 84、api 102、agent 93）。除第一批已列事项外无新增。
+Lab：除第一批事项外：
+- `apps/pubg-saas` 把 `gate-api` 与其测试留在本地（见上），`@agent/pubg-intelligence/gate` 引用改为相对路径；`public-domain-runtime-boundary` 测试里的动态 import 只保留 `@rine-kit/pubg-domain/core`。
+- `pubg-intelligence-lab` 的测试读了 `packages/pubg-intelligence/tests/highlight-fixture.ts`，该 fixture 复制到 `apps/pubg-intelligence-lab/tests/`。
+- 删除 `packages/pubg-intelligence`；`plugins/pubg`、`pubg-intelligence-lab` 改依赖 `@rine-kit/pubg-intelligence`。
+- 结果：`build`、各 `typecheck`、`test:pubg`、`test:amadeus` 通过；`pubg-saas` 207 测试 0 失败；`pubg-intelligence-lab` 仅剩基线上就失败的 `public-access`（需先 build client）。
 
 ## 许可证与发布
 
@@ -32,8 +53,8 @@
 ## 本地验证结果（kit）
 
 - `pnpm check:boundaries`：公共包不依赖 `@rine/*`、`@agent/*`、LiveKit、OpenClaw。
-- `pnpm typecheck` 通过；`pnpm test` 全绿；`pnpm test:pg`（临时 pgvector 容器）16/16。
-- 7 个 tarball 在空项目中可安装且全部入口（含 `pubg-domain/core`）可 import（验证 `dist`、`default-team.json`、`migrations` 均随包）。
+- `pnpm check`（边界 + 类型 + 测试）通过；`pnpm test:pg`（临时 pgvector 容器）postgres 16/16、memory-plugin 6/6。
+- 全部 11 个 tarball 在空项目中可安装且全部入口（含 `pubg-domain/core`）可 import（验证 `dist`、`default-team.json`、`migrations` 均随包）。
 
 ## 双宿主接线证明
 

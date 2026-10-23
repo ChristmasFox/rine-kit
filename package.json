@@ -12,7 +12,7 @@
     "check": "pnpm check:boundaries && pnpm typecheck && pnpm test",
     "typecheck": "pnpm -r --workspace-concurrency=1 typecheck",
     "test": "pnpm -r --if-present test",
-    "test:pg": "bash scripts/with-pgvector.sh pnpm --filter @rine-kit/agent-memory-postgres exec tsx --test \"tests/*.test.ts\"",
+    "test:pg": "bash scripts/with-pgvector.sh pnpm --filter @rine-kit/agent-memory-postgres exec tsx --test \"tests/*.test.ts\" && bash scripts/with-pgvector.sh pnpm --filter @rine-kit/agent-memory-plugin exec vitest run",
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "pack:all": "node scripts/pack-all.mjs"
   }

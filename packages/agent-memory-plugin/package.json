@@ -1,0 +1,48 @@
+{
+  "name": "@rine-kit/agent-memory-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Connects the @rine-kit/agent-memory engine to an @rine-kit/plugin-sdk host (Vercel AI SDK agents): remember / correct / forget tools, a recall hook and an observe hook. Authorization is whatever the host builds from its trusted context.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:pg": "bash ../../scripts/with-pgvector.sh npx vitest run",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@rine-kit/agent-memory": "workspace:*",
+    "@rine-kit/plugin-sdk": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@rine-kit/agent-memory-postgres": "workspace:*",
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.11.10",
+    "pg": "^8.13.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2",
+    "vitest": "^5.0.5"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/agent-memory-plugin"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  }
+}

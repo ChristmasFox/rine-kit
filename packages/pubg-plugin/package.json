@@ -1,0 +1,43 @@
+{
+  "name": "@rine-kit/pubg-plugin",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The PUBG tools as an @rine-kit/plugin-sdk plugin (Vercel AI SDK hosts such as RINE). The OpenClaw host keeps its own thin adapter over the same @rine-kit/pubg-tools catalogue.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@rine-kit/plugin-sdk": "workspace:*",
+    "@rine-kit/pubg-domain": "workspace:*",
+    "@rine-kit/pubg-tools": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/pubg-plugin"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  }
+}

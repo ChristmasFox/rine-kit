@@ -1,0 +1,57 @@
+{
+  "name": "@rine-kit/pubg-intelligence",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "PUBG telemetry analytics: battle, combat, rhythm, tactics, style, highlights, match story, raw-telemetry archive. Host-independent; extracted from Lab.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./archive": "./src/raw-telemetry-archive.ts",
+    "./backfill": "./src/raw-telemetry-backfill.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "import": "./dist/src/index.js",
+        "default": "./dist/src/index.js"
+      },
+      "./archive": {
+        "types": "./dist/src/raw-telemetry-archive.d.ts",
+        "import": "./dist/src/raw-telemetry-archive.js",
+        "default": "./dist/src/raw-telemetry-archive.js"
+      },
+      "./backfill": {
+        "types": "./dist/src/raw-telemetry-backfill.d.ts",
+        "import": "./dist/src/raw-telemetry-backfill.js",
+        "default": "./dist/src/raw-telemetry-backfill.js"
+      }
+    }
+  },
+  "files": [
+    "dist/src"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
+    "evaluation:replay": "tsx scripts/replay-benchmark.ts",
+    "telemetry:backfill": "tsx scripts/backfill-raw-telemetry.ts"
+  },
+  "dependencies": {
+    "@rine-kit/pubg-domain": "workspace:*",
+    "ai": "7.0.137",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/pubg-intelligence"
+  }
+}

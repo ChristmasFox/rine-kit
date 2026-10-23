@@ -8,6 +8,31 @@ importers:
 
   .: {}
 
+  packages/agent-core:
+    dependencies:
+      '@ai-sdk/openai-compatible':
+        specifier: 3.0.67
+        version: 3.0.67(zod@4.6.7)
+      '@rine-kit/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+      ai:
+        specifier: 7.0.137
+        version: 7.0.137(zod@4.6.7)
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(tsx@4.23.15))
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+
   packages/agent-memory:
     devDependencies:
       '@types/node':
@@ -47,6 +72,40 @@ importers:
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
+
+  packages/agent-memory-plugin:
+    dependencies:
+      '@rine-kit/agent-memory':
+        specifier: workspace:*
+        version: link:../agent-memory
+      '@rine-kit/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@rine-kit/agent-memory-postgres':
+        specifier: workspace:*
+        version: link:../agent-memory-postgres
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+      '@types/pg':
+        specifier: ^8.11.10
+        version: 8.23.1
+      pg:
+        specifier: ^8.13.0
+        version: 8.23.1
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+      vitest:
+        specifier: ^5.0.5
+        version: 5.0.5(@types/node@26.6.5)(vite@8.3.5(@types/node@26.6.5)(esbuild@0.28.2)(tsx@4.23.15))
 
   packages/agent-memory-postgres:
     dependencies:
@@ -109,6 +168,50 @@ importers:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/pubg-intelligence:
+    dependencies:
+      '@rine-kit/pubg-domain':
+        specifier: workspace:*
+        version: link:../pubg-domain
+      ai:
+        specifier: 7.0.137
+        version: 7.0.137(zod@4.6.7)
+      zod:
+        specifier: ^4.6.7
+        version: 4.6.7
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/pubg-plugin:
+    dependencies:
+      '@rine-kit/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+      '@rine-kit/pubg-domain':
+        specifier: workspace:*
+        version: link:../pubg-domain
+      '@rine-kit/pubg-tools':
+        specifier: workspace:*
+        version: link:../pubg-tools
     devDependencies:
       '@types/node':
         specifier: ^26.6.5

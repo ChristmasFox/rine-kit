@@ -1,0 +1,44 @@
+{
+  "name": "@rine-kit/agent-core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "The reasoning loop of an AI participant: chat model over an OpenAI-compatible endpoint, plugin tools, one turn service for text and voice. No dependency on RINE's API, LiveKit or desktop.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.67",
+    "@rine-kit/plugin-sdk": "workspace:*",
+    "ai": "7.0.137"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.2",
+    "vitest": "^5.0.5",
+    "zod": "^4.6.7"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/agent-core"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    }
+  }
+}
