@@ -1,0 +1,27 @@
+# dependencies / build
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+.pnpm-store/
+
+# env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# scratch / local
+.scratch/
+.DS_Store
+*.log
+coverage/
+.vite/
+.cache/
+
+# editors
+.idea/
+.vscode/
+*.swp
