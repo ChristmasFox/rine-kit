@@ -13,7 +13,8 @@ export interface PubgAccess {
 }
 
 export interface PubgPluginOptions<Ctx> {
-  access(ctx: Ctx): PubgAccess;
+  /** May look the team up (a database read); the tools wait for it. */
+  access(ctx: Ctx): PubgAccess | Promise<PubgAccess>;
 }
 
 const INSTRUCTIONS =
@@ -28,8 +29,8 @@ export function createPubgPlugin<Ctx>(options: PubgPluginOptions<Ctx>): Plugin<C
     name: spec.name,
     description: spec.description,
     input: spec.input,
-    run: (input, ctx, { signal }) => {
-      const access = options.access(ctx);
+    run: async (input, ctx, { signal }) => {
+      const access = await options.access(ctx);
       return runPubgTool(spec, input, {
         service: access.service,
         host: access.host,

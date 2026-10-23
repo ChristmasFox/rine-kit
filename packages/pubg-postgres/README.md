@@ -45,3 +45,9 @@ pnpm --filter @rine-kit/pubg-postgres test:pg   # 在一次性 pgvector 容器�
 | `public_sync_jobs`、`pubg_api_admission` | `pubg_sync_jobs`、`pubg_api_admission` |
 | 31 个迁移 | 1 个压缩迁移（只含 PUBG 表；记忆表在 `agent-memory-postgres`） |
 | 旧版"按分片回填"升级测试 | 不移植（新库无历史） |
+
+## 新写的部分（不是提取）
+
+`roster-store.ts`（`PostgresPubgRosterStore`）与迁移 `0002_pubg_account_claims.sql`：当一个小队就是"在这里认领了账号的人"
+时（RINE：一个房间 = 一个小队）所需的最小名单管理——认领、改认领、释放、列出、生成 `TeamContext`，认领后立即安排一次同步。
+Gate 对应的是 `team-admin-service`（围绕 KOOK 确认卡片，未提取）。这部分有自己的测试。

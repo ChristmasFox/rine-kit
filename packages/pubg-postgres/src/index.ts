@@ -4,3 +4,4 @@ export * from './sync-queue.js';
 export * from './contracts/team-aliases.js';
 export * from './contracts/team-preferences.js';
 export * from './contracts/team-roster.js';
+export * from './roster-store.js';
