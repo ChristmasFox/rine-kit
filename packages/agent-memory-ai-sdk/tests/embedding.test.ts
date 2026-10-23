@@ -174,9 +174,19 @@ test('embedding provider aborts a stalled fixture at its configured timeout', as
     doEmbed: async ({ abortSignal }) =>
       await new Promise((_, reject) => {
         if (!abortSignal) return reject(new Error('fixture_abort_signal_missing'));
-        abortSignal.addEventListener('abort', () => reject(new Error('fixture_cancelled')), {
-          once: true,
-        });
+        // AbortSignal.timeout() uses an unref'd timer. A bare Promise + abort listener does not
+        // keep node:test's event loop alive, so under CI concurrency the runner cancels this
+        // test with "Promise resolution is still pending but the event loop has already resolved"
+        // before the 100ms abort fires. Keep a ref'd stall timer until abort (or fail closed).
+        const stall = setTimeout(() => reject(new Error('fixture_not_aborted')), 5_000);
+        abortSignal.addEventListener(
+          'abort',
+          () => {
+            clearTimeout(stall);
+            reject(new Error('fixture_cancelled'));
+          },
+          { once: true },
+        );
       }),
   });
   const provider = new MemoryEmbeddingProvider(config, model);
