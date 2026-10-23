@@ -1,0 +1,27 @@
+{
+  "id": "example_squad",
+  "label": "Demo Squad (fixture only)",
+  "platform": "steam",
+  "players": [
+    {
+      "id": "fixture-player-1",
+      "name": "DemoPlayer01",
+      "aliases": ["demo1"]
+    },
+    {
+      "id": "fixture-player-2",
+      "name": "DemoPlayer02",
+      "aliases": ["demo2"]
+    },
+    {
+      "id": "fixture-player-3",
+      "name": "DemoPlayer03",
+      "aliases": ["demo3"]
+    },
+    {
+      "id": "fixture-player-4",
+      "name": "DemoPlayer04",
+      "aliases": ["demo4"]
+    }
+  ]
+}

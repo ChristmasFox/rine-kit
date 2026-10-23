@@ -1,0 +1,46 @@
+{
+  "name": "@rine-kit/agent-memory-postgres",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "PostgreSQL (+ optional pgvector) storage for @rine-kit/agent-memory: scoped entries, exact/lexical/semantic search, embedding index with budget, usage evidence, dreaming runs. Extracted from Gate; no KOOK dependency.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test tests/**/*.test.ts",
+    "test:pg": "bash ../../scripts/with-pgvector.sh npx tsx --test \"tests/*.test.ts\""
+  },
+  "dependencies": {
+    "@rine-kit/agent-memory": "workspace:*",
+    "pg": "^8.13.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/agent-memory-postgres"
+  }
+}

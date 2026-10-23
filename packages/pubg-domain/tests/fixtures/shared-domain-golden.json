@@ -1,0 +1,150 @@
+{
+  "contract": "pubg-query-v1",
+  "syntheticMatchIdsInRange": ["m1", "m2"],
+  "matches": [
+    {
+      "schemaVersion": 3,
+      "matchId": "m1",
+      "shard": "steam",
+      "createdAt": "2026-09-15T16:00:00.000Z",
+      "matchType": "competitive",
+      "gameMode": "squad-fpp",
+      "isCompetitive": true,
+      "mapName": "Erangel",
+      "duration": 1200,
+      "patchVersion": "test",
+      "players": [
+        {
+          "accountId": "p1",
+          "playerName": "Alice",
+          "kills": 4,
+          "deaths": 2,
+          "assists": 1,
+          "damage": 100,
+          "rank": 3
+        },
+        { "accountId": "p2", "playerName": "Bob", "kills": 3, "deaths": 0, "damage": 50, "rank": 1 }
+      ]
+    },
+    {
+      "schemaVersion": 3,
+      "matchId": "m2",
+      "shard": "steam",
+      "createdAt": "2026-09-16T12:00:00.000Z",
+      "matchType": "competitive",
+      "gameMode": "duo-fpp",
+      "isCompetitive": true,
+      "mapName": "Taego",
+      "duration": 1200,
+      "patchVersion": "test",
+      "players": [
+        {
+          "accountId": "p1",
+          "playerName": "Alice",
+          "kills": 2,
+          "deaths": 1,
+          "assists": 2,
+          "damage": 80,
+          "rank": 5
+        },
+        {
+          "accountId": "p2",
+          "playerName": "Bob",
+          "kills": 1,
+          "deaths": 0,
+          "assists": 0,
+          "damage": 10,
+          "rank": 2
+        }
+      ]
+    },
+    {
+      "schemaVersion": 3,
+      "matchId": "m3",
+      "shard": "steam",
+      "createdAt": "2026-09-17T00:00:00.000Z",
+      "matchType": "competitive",
+      "gameMode": "squad-fpp",
+      "isCompetitive": true,
+      "mapName": "Erangel",
+      "duration": 1200,
+      "patchVersion": "test",
+      "players": [{ "accountId": "p1", "playerName": "Alice", "kills": 99, "deaths": 1, "rank": 1 }]
+    }
+  ],
+  "query": {
+    "version": 3,
+    "queryId": "q-test",
+    "domain": "pubg",
+    "subject": { "type": "players", "ids": ["p1", "p2"] },
+    "operation": "report",
+    "selector": {
+      "type": "time_range",
+      "start": "2026-09-15T00:00:00.000Z",
+      "end": "2026-09-17T00:00:00.000Z",
+      "timezone": "Asia/Shanghai",
+      "businessDayStart": "00:00"
+    },
+    "matchSelector": null,
+    "segments": [],
+    "groupBy": "player",
+    "metrics": ["kills", "kd", "assists"],
+    "filters": {},
+    "orderBy": { "metric": "kills", "direction": "desc" },
+    "limit": null,
+    "reference": {
+      "sessionId": "telegram:chat-a:user-a:pubg",
+      "selectorExplicit": true,
+      "subjectExplicit": true,
+      "useResultSet": false,
+      "inheritedFromContext": false,
+      "planner": "provided"
+    },
+    "presentation": { "compact": true }
+  },
+  "coverage": {
+    "status": "OK",
+    "complete": true,
+    "coverageStart": "2026-09-15T00:00:00.000Z",
+    "coverageEnd": "2026-09-17T00:00:00.000Z",
+    "checkedAt": "2026-09-17T00:00:00.000Z",
+    "failedMatchIds": [],
+    "sourceUnavailable": false,
+    "freshness": "fresh",
+    "queryCovered": true,
+    "requiredMatchCount": 3,
+    "availableMatchCount": 3
+  },
+  "source": {
+    "store": "fixture",
+    "syncInvoked": false,
+    "playerApiCalls": 0,
+    "matchApiCalls": 0,
+    "localMatchCount": 3
+  },
+  "expectedPlayers": [
+    {
+      "key": "p1",
+      "matches": 2,
+      "kills": 6,
+      "assists": 3,
+      "damage": 180,
+      "deaths": 3,
+      "kd": 2,
+      "wins": 0,
+      "top10": 2
+    },
+    {
+      "key": "p2",
+      "matches": 2,
+      "kills": 4,
+      "assists": 0,
+      "damage": 60,
+      "deaths": 0,
+      "kd": null,
+      "denominatorZero": 1,
+      "wins": 1,
+      "top10": 2
+    }
+  ]
+}

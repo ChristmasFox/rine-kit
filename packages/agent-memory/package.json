@@ -1,0 +1,38 @@
+{
+  "name": "@rine-kit/agent-memory",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Host-agnostic agent memory runtime: recall (exact/lexical/semantic fusion), explicit writes, evidence-based dreaming. Authorization stays opaque; hosts supply storage, model, embedding and clock ports.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test tests/**/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/agent-memory"
+  }
+}

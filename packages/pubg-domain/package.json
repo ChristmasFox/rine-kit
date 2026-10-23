@@ -1,0 +1,49 @@
+{
+  "name": "@rine-kit/pubg-domain",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "PUBG domain: query schema, time selectors, team context, SQLite/Postgres-neutral repository port, review and share logic. Host-independent; extracted from Lab.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts",
+    "./core": "./src/core.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/src/index.d.ts",
+        "import": "./dist/src/index.js",
+        "default": "./dist/src/index.js"
+      },
+      "./core": {
+        "types": "./dist/src/core.d.ts",
+        "import": "./dist/src/core.js",
+        "default": "./dist/src/core.js"
+      }
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist/src",
+    "dist/config"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@rine-kit/presentation": "workspace:*",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/pubg-domain"
+  }
+}

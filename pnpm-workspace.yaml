@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+
+# esbuild ships its binary via per-platform optional packages; its postinstall is only an optimisation.
+allowBuilds:
+  esbuild: false

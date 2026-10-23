@@ -1,0 +1,372 @@
+{
+  "contract": "pubg-domain-edge-parity-v1",
+  "now": "2026-09-19T00:30:00.000Z",
+  "team": {
+    "id": "edge-team",
+    "label": "Synthetic Edge Team",
+    "platform": "steam",
+    "players": [
+      { "id": "p1", "name": "Alice", "aliases": ["a"] },
+      { "id": "p2", "name": "Bob", "aliases": ["b"] },
+      { "id": "p3", "name": "No Activity", "aliases": ["idle"] }
+    ]
+  },
+  "matches": [
+    {
+      "matchId": "before",
+      "shard": "steam",
+      "createdAt": "2026-09-17T21:59:59.999Z",
+      "matchType": "competitive",
+      "gameMode": "squad-fpp",
+      "mapName": "Erangel",
+      "duration": 1200,
+      "players": [
+        {
+          "accountId": "p1",
+          "playerName": "Alice",
+          "kills": 100,
+          "deaths": 1,
+          "rank": 2,
+          "revives": 99
+        }
+      ]
+    },
+    {
+      "matchId": "boundary",
+      "shard": "steam",
+      "createdAt": "2026-09-17T22:00:00.000Z",
+      "matchType": "competitive",
+      "gameMode": "squad-fpp",
+      "mapName": "Erangel",
+      "duration": 1200,
+      "players": [
+        {
+          "accountId": "p1",
+          "playerName": "Alice",
+          "kills": 4,
+          "deaths": 1,
+          "assists": 1,
+          "damage": 100,
+          "rank": 3,
+          "revives": 1
+        },
+        {
+          "accountId": "p2",
+          "playerName": "Bob",
+          "kills": 3,
+          "deaths": 0,
+          "damage": 50,
+          "rank": 1,
+          "revives": 4
+        }
+      ]
+    },
+    {
+      "matchId": "late",
+      "shard": "steam",
+      "createdAt": "2026-09-18T21:59:59.999Z",
+      "matchType": "competitive",
+      "gameMode": "duo-fpp",
+      "mapName": "Taego",
+      "duration": 1200,
+      "players": [
+        {
+          "accountId": "p1",
+          "playerName": "Alice",
+          "kills": 2,
+          "deaths": 1,
+          "assists": 2,
+          "damage": 80,
+          "rank": 5,
+          "revives": 2
+        },
+        {
+          "accountId": "p2",
+          "playerName": "Bob",
+          "kills": 1,
+          "deaths": 0,
+          "assists": 1,
+          "damage": 10,
+          "rank": 4,
+          "revives": 1
+        }
+      ]
+    },
+    {
+      "matchId": "next",
+      "shard": "steam",
+      "createdAt": "2026-09-18T22:00:00.000Z",
+      "matchType": "competitive",
+      "gameMode": "squad-fpp",
+      "mapName": "Erangel",
+      "duration": 1200,
+      "players": [{ "accountId": "p1", "playerName": "Alice", "kills": 99 }]
+    }
+  ],
+  "coverage": {
+    "status": "OK",
+    "complete": true,
+    "coverageStart": "2026-09-17T21:00:00.000Z",
+    "coverageEnd": "2026-09-19T00:30:00.000Z",
+    "checkedAt": "2026-09-19T00:30:00.000Z",
+    "failedMatchIds": [],
+    "sourceUnavailable": false,
+    "freshness": "fresh",
+    "localComplete": true,
+    "queryCovered": true,
+    "requiredMatchCount": 4,
+    "availableMatchCount": 4
+  },
+  "source": {
+    "store": "fixture",
+    "syncInvoked": false,
+    "playerApiCalls": 0,
+    "matchApiCalls": 0,
+    "localMatchCount": 4
+  },
+  "cases": [
+    {
+      "id": "yesterday-kd-revives",
+      "query": {},
+      "expected": {
+        "status": "OK",
+        "matchIds": ["boundary", "late"],
+        "metrics": {
+          "p1": { "matches": 2, "kills": 6, "deaths": 2, "kd": 3, "assists": 3, "revives": 3 },
+          "p2": {
+            "matches": 2,
+            "kills": 4,
+            "deaths": 0,
+            "kd": null,
+            "denominatorZero": 1,
+            "assists": 1,
+            "revives": 5
+          },
+          "p3": { "matches": 0, "kills": 0, "kd": null, "denominatorZero": null }
+        }
+      }
+    },
+    {
+      "id": "team-rank",
+      "query": {
+        "operation": "rank",
+        "groupBy": "team",
+        "orderBy": { "metric": "kills", "direction": "desc" }
+      },
+      "expected": {
+        "status": "OK",
+        "matchIds": ["boundary", "late"],
+        "metrics": {
+          "edge-team": {
+            "matches": 2,
+            "kills": 10,
+            "kd": 5,
+            "teamCombinedKD": 5,
+            "revives": 8,
+            "rank": 3.25,
+            "wins": 1,
+            "top10": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "business-day-group",
+      "query": {
+        "groupBy": "day",
+        "selector": {
+          "type": "time_range",
+          "start": "2026-09-17T21:00:00.000Z",
+          "end": "2026-09-19T00:30:00.000Z"
+        }
+      },
+      "expected": {
+        "status": "OK",
+        "matchIds": ["before", "boundary", "late", "next"],
+        "metrics": {
+          "2026-09-17": { "matches": 1, "kills": 100 },
+          "2026-09-18": { "matches": 2, "kills": 10 },
+          "2026-09-19": { "matches": 1, "kills": 99, "kd": null }
+        }
+      }
+    },
+    {
+      "id": "unknown-death-ranking",
+      "query": {
+        "selector": { "type": "relative_period", "value": "today" },
+        "operation": "rank",
+        "orderBy": { "metric": "kd", "direction": "desc" }
+      },
+      "expected": {
+        "status": "OK",
+        "matchIds": ["next"],
+        "metrics": {
+          "p1": { "kills": 99, "deaths": null, "kd": null, "performance_score": null },
+          "p2": { "matches": 0, "kd": null },
+          "p3": { "matches": 0, "kd": null }
+        },
+        "unranked": ["p1", "p2", "p3"]
+      }
+    },
+    {
+      "id": "zero-matches",
+      "query": {
+        "selector": {
+          "type": "time_range",
+          "start": "2026-09-20T00:00:00.000Z",
+          "end": "2026-09-21T00:00:00.000Z"
+        }
+      },
+      "expected": {
+        "status": "NO_MATCHES",
+        "matchIds": [],
+        "metrics": {
+          "p1": { "matches": 0, "kd": null },
+          "p2": { "matches": 0, "kd": null },
+          "p3": { "matches": 0, "kd": null }
+        }
+      }
+    },
+    {
+      "id": "partial-known-stats",
+      "query": {},
+      "coverage": {
+        "status": "PARTIAL",
+        "complete": false,
+        "freshness": "unknown",
+        "failedMatchIds": ["upstream-gap"],
+        "queryCovered": false
+      },
+      "expected": {
+        "status": "PARTIAL",
+        "matchIds": ["boundary", "late"],
+        "metrics": { "p1": { "kills": 6, "kd": 3 } }
+      }
+    },
+    {
+      "id": "unknown-empty-coverage",
+      "query": {
+        "selector": {
+          "type": "time_range",
+          "start": "2026-09-20T00:00:00.000Z",
+          "end": "2026-09-21T00:00:00.000Z"
+        }
+      },
+      "coverage": {
+        "status": "SOURCE_UNAVAILABLE",
+        "complete": false,
+        "freshness": "unknown",
+        "sourceUnavailable": true,
+        "queryCovered": false
+      },
+      "expected": {
+        "status": "SOURCE_UNAVAILABLE",
+        "matchIds": [],
+        "metrics": { "p1": { "matches": 0, "kd": null } }
+      }
+    },
+    {
+      "id": "before-six-today",
+      "now": "2026-09-18T21:59:59.999Z",
+      "query": { "selector": { "type": "relative_period", "value": "today" }, "groupBy": "team" },
+      "expected": {
+        "status": "OK",
+        "matchIds": ["boundary"],
+        "metrics": { "edge-team": { "matches": 1, "kills": 7, "revives": 5 } }
+      }
+    },
+    {
+      "id": "comparison-zero-denominator",
+      "query": {
+        "operation": "compare",
+        "segments": [
+          { "label": "current", "selector": { "type": "relative_period", "value": "yesterday" } },
+          {
+            "label": "empty",
+            "selector": {
+              "type": "time_range",
+              "start": "2026-09-20T00:00:00.000Z",
+              "end": "2026-09-21T00:00:00.000Z"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "status": "OK",
+        "matchIds": ["boundary", "late"],
+        "metrics": { "p1": { "kills": 6, "kd": null }, "p2": { "kills": 4, "kd": null } },
+        "nullKillRatios": ["p1", "p2"]
+      }
+    }
+  ],
+  "telemetry": {
+    "boundary": [
+      {
+        "_T": "LogPlayerTakeDamage",
+        "attacker": { "accountId": "p1" },
+        "victim": { "accountId": "p2" },
+        "damage": 1,
+        "damageTypeCategory": "Damage_Kick",
+        "timeSeconds": 10,
+        "common": { "isGame": true }
+      },
+      {
+        "_T": "LogPlayerTakeDamage",
+        "attacker": { "accountId": "p1" },
+        "victim": { "accountId": "p2" },
+        "damage": 2,
+        "damageTypeCategory": "Damage_Kick",
+        "timeSeconds": 11,
+        "common": { "isGame": true }
+      },
+      {
+        "_T": "LogPlayerTakeDamage",
+        "attacker": { "accountId": "p1" },
+        "victim": { "accountId": "p2" },
+        "damage": 3,
+        "damageTypeCategory": "Damage_Punch",
+        "timeSeconds": 12,
+        "common": { "isGame": true }
+      },
+      {
+        "_T": "LogPlayerTakeDamage",
+        "attacker": { "accountId": "p2" },
+        "victim": { "accountId": "p1" },
+        "damage": 4,
+        "damageTypeCategory": "Damage_Bullet",
+        "damageCauserName": "WeapAK47_C",
+        "timeSeconds": 20,
+        "common": { "isGame": true }
+      }
+    ],
+    "late": [
+      {
+        "_T": "LogPlayerTakeDamage",
+        "attacker": { "accountId": "p1" },
+        "victim": { "accountId": "p2" },
+        "damage": 2,
+        "damageTypeCategory": "Damage_Kick",
+        "timeSeconds": 15,
+        "common": { "isGame": true }
+      },
+      {
+        "_T": "LogPlayerTakeDamage",
+        "attacker": { "accountId": "p2" },
+        "victim": { "accountId": "p1" },
+        "damage": 5,
+        "damageTypeCategory": "Damage_Bullet",
+        "damageCauserName": "FragGrenade",
+        "timeSeconds": 20,
+        "common": { "isGame": true }
+      }
+    ]
+  },
+  "damageExpected": {
+    "all": [6, 17],
+    "kick": [3, 5],
+    "punch": [1, 3],
+    "melee": [4, 8],
+    "partialKnown": [4, 10],
+    "knownZero": [0, 0]
+  }
+}

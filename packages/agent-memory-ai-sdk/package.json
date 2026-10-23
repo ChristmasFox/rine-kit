@@ -1,0 +1,45 @@
+{
+  "name": "@rine-kit/agent-memory-ai-sdk",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vercel AI SDK adapter for @rine-kit/agent-memory: an OpenAI-compatible embedding provider (bounded, normalised, budget-aware) and the Light/REM learning planner. Extracted from Gate.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test tests/**/*.test.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "3.0.67",
+    "@rine-kit/agent-memory": "workspace:*",
+    "@rine-kit/agent-memory-postgres": "workspace:*",
+    "ai": "7.0.137",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/agent-memory-ai-sdk"
+  }
+}
