@@ -63,6 +63,12 @@ test('claims build a team: one account per member, replaced on re-claim, scoped 
     const fresh = (await store.getTeamContext(tenant, room))!;
     assert.equal(await new PostgresPubgRepository(pool, fresh).countMatches(), 0);
 
+    // a closed room's team goes entirely
+    await store.claim({ ...base, teamId: `gone-${suffix}`, teamLabel: 'Gone', actorId: 'u1', accountId: acct('c'), displayName: 'Carol' });
+    await store.deleteTeam(tenant, `gone-${suffix}`);
+    assert.equal(await store.getTeamContext(tenant, `gone-${suffix}`), null);
+    assert.equal((await store.listClaims(tenant, room)).length > 0, true, 'other teams stay');
+
     // release: the member leaves; the team disappears with its last member
     assert.equal(await store.release(tenant, room, 'u2'), true);
     assert.equal(await store.release(tenant, room, 'u2'), false);

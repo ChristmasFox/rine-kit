@@ -148,6 +148,11 @@ export class PostgresPubgRosterStore {
     return Boolean(accountId);
   }
 
+  /** Forgets a whole team (its room was closed): roster, claims, sync job and cached team data. */
+  async deleteTeam(tenantId: string, teamId: string): Promise<void> {
+    await this.pool.query('DELETE FROM pubg_teams WHERE tenant_id=$1 AND team_id=$2', [tenantId, teamId]);
+  }
+
   async listClaims(tenantId: string, teamId: string): Promise<PubgClaim[]> {
     const result = await this.pool.query(
       `SELECT claim.actor_id, claim.pubg_account_id, claim.pubg_shard, claim.claim_status, claim.claimed_at,
