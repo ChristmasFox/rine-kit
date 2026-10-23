@@ -1,0 +1,46 @@
+{
+  "name": "@rine-kit/pubg-postgres",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "PostgreSQL storage for PUBG team data (matches, telemetry features, sync queue, query sessions) behind @rine-kit/pubg-domain's PubgRepositoryPort. Extracted from Gate; tenancy is a host-supplied scope, no KOOK dependency.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test \"tests/**/*.test.ts\"",
+    "test:pg": "bash ../../scripts/with-pgvector.sh npx tsx --test \"tests/*.test.ts\""
+  },
+  "dependencies": {
+    "@rine-kit/pubg-domain": "workspace:*",
+    "pg": "^8.13.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/pubg-postgres"
+  }
+}
