@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/agent-memory-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Connects the @rine-kit/agent-memory engine to an @rine-kit/plugin-sdk host (Vercel AI SDK agents): remember / correct / forget tools, a recall hook and an observe hook. Authorization is whatever the host builds from its trusted context.",
   "exports": {

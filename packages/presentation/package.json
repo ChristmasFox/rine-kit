@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/presentation",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "PUBG reply presentation: contracts, builders and renderers (Markdown / messenger-neutral) used by the PUBG domain. Extracted from Lab.",
   "license": "MIT",

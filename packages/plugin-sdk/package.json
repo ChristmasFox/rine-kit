@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/plugin-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Contract for AI plugins: tools and prompt instructions a host can run for its own trusted users. No dependency on any host.",
   "exports": {
