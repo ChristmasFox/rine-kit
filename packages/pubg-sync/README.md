@@ -15,9 +15,9 @@ PUBG 数据同步：团队同步 worker、玩家名解析、官方 API 额度准
 DATABASE_URL=postgres://... PUBLIC_PUBG_API_KEY=... node dist/worker-main.js --apply [--once]
 ```
 
-不带 `--apply` 只打印提示（空跑）。其余环境变量（均有默认值）：`PUBLIC_PUBG_REQUESTS_PER_MINUTE`、`PUBLIC_SYNC_INTERVAL_MS`、
-`PUBLIC_SYNC_MAX_MATCHES`、`PUBLIC_SYNC_MAX_TELEMETRY_FETCHES`、`PUBLIC_SYNC_TEAM_CONCURRENCY`、`PUBLIC_SYNC_LEASE_MS`、
-`PUBG_SAAS_WORKER_METRICS_PORT`。可选 `PUBLIC_TELEMETRY_ARCHIVE_DIR`：设置后，worker 下载的原始遥测先落入该目录（`RawTelemetryArchive`，gzip、按 Match ID、校验 SHA-256），同一进程或提问侧再次需要时优先读盘，不再打遥测 CDN。提问侧要把同一个目录传给 `PubgDomainService` 的 `rawTelemetryArchive`（Lab/Gate 用 `PUBG_TELEMETRY_ARCHIVE_DIR`）。不设置则行为和以前一样：特征缓存未命中时仍向遥测 CDN 取原始文件。先用 `migratePubgDatabase`（`@rine-kit/pubg-postgres`）建好库表。
+不带 `--apply` 只打印提示（空跑）。未设置 `PUBLIC_SYNC_INTERVAL_MS` 时，调度与 Lab 的 `amadeus-pubg-telemetry-hourly` 相同：每小时第 5 分（`PUBLIC_SYNC_TIMEZONE` 默认 `Asia/Shanghai`，`PUBLIC_SYNC_HOURLY_MINUTE` 可改）刷新玩家列表，只拉本地没有的新比赛，并为新对局或到期重试对局取遥测（`maxMatches=500`、`maxFetches=20`、并发 2）。空闲时最多每分钟看一眼队列，所以新登记的小队不用等整点；这一眼不打 PUBG。设置 `PUBLIC_SYNC_INTERVAL_MS` 则改回固定间隔。
+
+其余环境变量（均有默认值）：`PUBLIC_PUBG_REQUESTS_PER_MINUTE`、`PUBLIC_SYNC_MAX_MATCHES`、`PUBLIC_SYNC_MAX_TELEMETRY_FETCHES`、`PUBLIC_SYNC_TEAM_CONCURRENCY`、`PUBLIC_SYNC_LEASE_MS`、`PUBG_SAAS_WORKER_METRICS_PORT`。可选 `PUBLIC_TELEMETRY_ARCHIVE_DIR`：设置后，下载的原始遥测先落入该目录（必须在进程工作目录之外；`RawTelemetryArchive`，gzip、按 Match ID、校验 SHA-256）。提问侧要把同一个目录传给 `PubgDomainService` 的 `rawTelemetryArchive`。不设置则特征缓存未命中时仍向遥测 CDN 取原始文件。先用 `migratePubgDatabase`（`@rine-kit/pubg-postgres`）建好库表。
 
 ## 测试
 

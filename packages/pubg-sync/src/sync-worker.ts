@@ -56,6 +56,9 @@ export interface PublicSyncWorkerOptions {
   /** Where raw telemetry files are kept once downloaded, so any process (this worker, the AI that answers
    * questions) reads a match's telemetry from disk instead of fetching it again. Optional. */
   rawTelemetryArchive?: RawTelemetryArchivePort;
+  /** When set, a finished team is scheduled with this delay instead of `syncIntervalMs`.
+   * Lab's hourly prefetch uses the delay until the next minute-5 slot. */
+  nextSyncDelayMs?: (now: Date) => number;
   onTeamError?: (code: 'public_sync_team_invalid' | 'public_sync_team_failed') => void;
 }
 
@@ -224,6 +227,7 @@ export class PublicSyncWorker {
   private readonly telemetryConcurrency: number;
   private readonly teamConcurrency: number;
   private readonly syncIntervalMs: number;
+  private readonly nextSyncDelayMs: ((now: Date) => number) | undefined;
   private readonly leaseMs: number;
   private readonly queue: PublicSyncQueue;
 
@@ -234,6 +238,7 @@ export class PublicSyncWorker {
     this.telemetryConcurrency = boundedInteger(options.telemetryConcurrency ?? DEFAULT_TELEMETRY_CONCURRENCY, DEFAULT_TELEMETRY_CONCURRENCY, 1, 4);
     this.teamConcurrency = boundedInteger(options.teamConcurrency ?? DEFAULT_TEAM_CONCURRENCY, DEFAULT_TEAM_CONCURRENCY, 1, 16);
     this.syncIntervalMs = boundedInteger(options.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS, DEFAULT_SYNC_INTERVAL_MS, 1_000, 24 * 60 * 60_000);
+    this.nextSyncDelayMs = options.nextSyncDelayMs;
     this.leaseMs = boundedInteger(options.leaseMs ?? 120_000, 120_000, 1_000, 15 * 60_000);
     this.queue = new PublicSyncQueue(pool, { leaseMs: this.leaseMs });
     this.now = options.now ?? (() => new Date());
@@ -329,7 +334,8 @@ export class PublicSyncWorker {
         trigger: 'hourly',
         signal: stopIfLeaseLost.signal,
       });
-      if (stopIfLeaseLost.signal.aborted || !await this.queue.complete(job, this.syncIntervalMs)) {
+      const delayMs = this.nextSyncDelayMs ? this.nextSyncDelayMs(this.now()) : this.syncIntervalMs;
+      if (stopIfLeaseLost.signal.aborted || !await this.queue.complete(job, delayMs)) {
         return { ok: false, invalid: false };
       }
       return { ok: true, telemetry: telemetryRun(result.data) };

@@ -1,6 +1,14 @@
 import { pathToFileURL } from 'node:url';
 import { Pool } from 'pg';
+import { assertArchiveOutsideRepository } from '@rine-kit/pubg-intelligence/backfill';
 import { RawTelemetryArchive } from '@rine-kit/pubg-intelligence/archive';
+import {
+  clampSyncDelayMs,
+  HOURLY_PREFETCH_MINUTE,
+  HOURLY_PREFETCH_TIMEZONE,
+  nextHourlyPrefetchDelayMs,
+  syncCyclePauseMs,
+} from './hourly-prefetch.js';
 import { PublicSyncWorker } from './sync-worker.js';
 import { PostgresPublicPubgAdmission } from './request-limiter.js';
 import { configurePublicEgress } from './public-egress.js';
@@ -14,6 +22,13 @@ import { createPublicSyncCycleLog } from './worker-alerts.js';
 import { PublicSyncWorkerMetrics } from './worker-metrics.js';
 
 const DEFAULT_INTERVAL_MS = 5 * 60_000;
+
+function hourMinute(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === '') return fallback;
+  const result = Number(value);
+  if (!Number.isSafeInteger(result) || result < 0 || result > 59) throw new Error('pubg_saas_worker_config_invalid');
+  return result;
+}
 
 function positiveInteger(value: string | undefined, fallback: number, maximum: number): number {
   if (value === undefined || value.trim() === '') return fallback;
@@ -52,7 +67,12 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
   if (!['postgres:', 'postgresql:'].includes(parsed.protocol)) throw new Error('pubg_saas_database_url_invalid');
 
   const requestsPerMinute = positiveInteger(env.PUBLIC_PUBG_REQUESTS_PER_MINUTE, 10, 1000);
-  const intervalMs = positiveInteger(env.PUBLIC_SYNC_INTERVAL_MS, DEFAULT_INTERVAL_MS, 24 * 60 * 60_000);
+  const explicitInterval = env.PUBLIC_SYNC_INTERVAL_MS?.trim();
+  const hourly = !explicitInterval;
+  const intervalMs = positiveInteger(explicitInterval, DEFAULT_INTERVAL_MS, 24 * 60 * 60_000);
+  const timeZone = env.PUBLIC_SYNC_TIMEZONE?.trim() || HOURLY_PREFETCH_TIMEZONE;
+  const minute = hourMinute(env.PUBLIC_SYNC_HOURLY_MINUTE, HOURLY_PREFETCH_MINUTE);
+  if (hourly) nextHourlyPrefetchDelayMs(new Date(), { timeZone, minute });
   const maxMatches = positiveInteger(env.PUBLIC_SYNC_MAX_MATCHES, 500, 1000);
   const maxTelemetryFetches = positiveInteger(env.PUBLIC_SYNC_MAX_TELEMETRY_FETCHES, 20, 50);
   const teamConcurrency = positiveInteger(env.PUBLIC_SYNC_TEAM_CONCURRENCY, 2, 16);
@@ -87,7 +107,8 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
       teamConcurrency,
       syncIntervalMs: intervalMs,
       leaseMs,
-      ...(archiveDirectory ? { rawTelemetryArchive: new RawTelemetryArchive(archiveDirectory) } : {}),
+      ...(archiveDirectory ? { rawTelemetryArchive: new RawTelemetryArchive(await assertArchiveOutsideRepository(archiveDirectory, env.PUBLIC_SYNC_REPOSITORY_ROOT?.trim() || process.cwd())) } : {}),
+      ...(hourly ? { nextSyncDelayMs: (now: Date) => clampSyncDelayMs(nextHourlyPrefetchDelayMs(now, { timeZone, minute })) } : {}),
       onTeamError: code => process.stderr.write(`${code}\n`),
     });
     do {
@@ -112,7 +133,7 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
       metrics.recordCycle(cycleLog);
       process.stdout.write(`${JSON.stringify(cycleLog)}\n`);
       if (once || stop.signal.aborted) break;
-      await wait(intervalMs, stop.signal);
+      await wait(syncCyclePauseMs({ hourly, intervalMs, now: new Date(), timeZone, minute }), stop.signal);
     } while (!stop.signal.aborted);
   } finally {
     stop.abort();
