@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/agent-memory-postgres",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "description": "PostgreSQL (+ optional pgvector) storage for @rine-kit/agent-memory: scoped entries, exact/lexical/semantic search, embedding index with budget, usage evidence, dreaming runs. Extracted from Gate; no KOOK dependency.",
   "license": "MIT",
