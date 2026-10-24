@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@rine-kit/pubg-domain": "workspace:*",
+    "@rine-kit/pubg-intelligence": "workspace:*",
     "@rine-kit/pubg-postgres": "workspace:*",
     "pg": "^8.13.0",
     "undici": "^8.10.2"
