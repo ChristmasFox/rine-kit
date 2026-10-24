@@ -17,7 +17,7 @@ DATABASE_URL=postgres://... PUBLIC_PUBG_API_KEY=... node dist/worker-main.js --a
 
 不带 `--apply` 只打印提示（空跑）。其余环境变量（均有默认值）：`PUBLIC_PUBG_REQUESTS_PER_MINUTE`、`PUBLIC_SYNC_INTERVAL_MS`、
 `PUBLIC_SYNC_MAX_MATCHES`、`PUBLIC_SYNC_MAX_TELEMETRY_FETCHES`、`PUBLIC_SYNC_TEAM_CONCURRENCY`、`PUBLIC_SYNC_LEASE_MS`、
-`PUBG_SAAS_WORKER_METRICS_PORT`。先用 `migratePubgDatabase`（`@rine-kit/pubg-postgres`）建好库表。
+`PUBG_SAAS_WORKER_METRICS_PORT`。可选 `PUBLIC_TELEMETRY_ARCHIVE_DIR`：设置后，worker 下载的原始遥测先落入该目录（`RawTelemetryArchive`，gzip、按 Match ID、校验 SHA-256），同一进程或提问侧再次需要时优先读盘，不再打遥测 CDN。提问侧要把同一个目录传给 `PubgDomainService` 的 `rawTelemetryArchive`（Lab/Gate 用 `PUBG_TELEMETRY_ARCHIVE_DIR`）。不设置则行为和以前一样：特征缓存未命中时仍向遥测 CDN 取原始文件。先用 `migratePubgDatabase`（`@rine-kit/pubg-postgres`）建好库表。
 
 ## 测试
 

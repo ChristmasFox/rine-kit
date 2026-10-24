@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url';
 import { Pool } from 'pg';
+import { RawTelemetryArchive } from '@rine-kit/pubg-intelligence/archive';
 import { PublicSyncWorker } from './sync-worker.js';
 import { PostgresPublicPubgAdmission } from './request-limiter.js';
 import { configurePublicEgress } from './public-egress.js';
@@ -56,6 +57,7 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
   const maxTelemetryFetches = positiveInteger(env.PUBLIC_SYNC_MAX_TELEMETRY_FETCHES, 20, 50);
   const teamConcurrency = positiveInteger(env.PUBLIC_SYNC_TEAM_CONCURRENCY, 2, 16);
   const leaseMs = positiveInteger(env.PUBLIC_SYNC_LEASE_MS, 120_000, 15 * 60_000);
+  const archiveDirectory = env.PUBLIC_TELEMETRY_ARCHIVE_DIR?.trim() || undefined;
   const pool = new Pool({ connectionString: databaseUrl, max: 4, connectionTimeoutMillis: 5000, idleTimeoutMillis: 10000, statement_timeout: 30_000 });
   const stop = new AbortController();
   const metrics = new PublicSyncWorkerMetrics();
@@ -85,6 +87,7 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
       teamConcurrency,
       syncIntervalMs: intervalMs,
       leaseMs,
+      ...(archiveDirectory ? { rawTelemetryArchive: new RawTelemetryArchive(archiveDirectory) } : {}),
       onTeamError: code => process.stderr.write(`${code}\n`),
     });
     do {

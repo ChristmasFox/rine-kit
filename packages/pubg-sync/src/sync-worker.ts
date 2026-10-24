@@ -5,6 +5,7 @@ import {
   PubgDomainService,
   TelemetryWorker,
   type TeamConfig,
+  type RawTelemetryArchivePort,
   type TeamContext,
   type TelemetryDownloader,
 } from '@rine-kit/pubg-domain/core';
@@ -52,6 +53,9 @@ export interface PublicSyncWorkerOptions {
   teamConcurrency?: number;
   syncIntervalMs?: number;
   leaseMs?: number;
+  /** Where raw telemetry files are kept once downloaded, so any process (this worker, the AI that answers
+   * questions) reads a match's telemetry from disk instead of fetching it again. Optional. */
+  rawTelemetryArchive?: RawTelemetryArchivePort;
   onTeamError?: (code: 'public_sync_team_invalid' | 'public_sync_team_failed') => void;
 }
 
@@ -243,6 +247,7 @@ export class PublicSyncWorker {
       baseUrl: API_ORIGIN,
       timeoutMs: 60_000,
       fetchImpl,
+      ...(options.rawTelemetryArchive ? { archive: options.rawTelemetryArchive } : {}),
     });
     this.onTeamError = options.onTeamError ?? (() => undefined);
   }

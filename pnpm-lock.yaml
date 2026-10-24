@@ -253,6 +253,9 @@ importers:
       '@rine-kit/pubg-domain':
         specifier: workspace:*
         version: link:../pubg-domain
+      '@rine-kit/pubg-intelligence':
+        specifier: workspace:*
+        version: link:../pubg-intelligence
       '@rine-kit/pubg-postgres':
         specifier: workspace:*
         version: link:../pubg-postgres

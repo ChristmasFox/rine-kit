@@ -140,9 +140,20 @@ test('public worker syncs persisted rosters, stores match and friendly-fire tele
     await createTeam(pool, { ...teamB, label: 'Fixture B', shard: 'steam', members: [
       { accountId: accountShared, displayName: 'Avery' }, { accountId: accountB2, displayName: 'Bryn' }] });
 
+    const archived: string[] = [];
+    const archive = {
+      read: async () => null,
+      write: async () => undefined,
+      refresh: async (_id: string, fetchRaw: () => Promise<Uint8Array>) => fetchRaw(),
+      getOrFetch: async (id: string, fetchRaw: () => Promise<Uint8Array>) => {
+        archived.push(id);
+        return fetchRaw();
+      },
+    };
     const worker = new PublicSyncWorker(pool, {
       apiKey: 'fixture-only',
       admission,
+      rawTelemetryArchive: archive,
       fetchImpl: fetcher,
       now: () => new Date('2026-10-13T04:00:00.000Z'),
       maxTelemetryFetches: 4,
@@ -157,6 +168,7 @@ test('public worker syncs persisted rosters, stores match and friendly-fire tele
       telemetryFetched: 2,
       telemetryUnavailable: 0,
     });
+    assert.equal(archived.length, 2, 'every downloaded telemetry file goes through the raw archive');
     assert.equal(matchDetailRequests, 2);
     assert.equal(apiRequests, playerDiscoveryRequests + matchDetailRequests);
     assert.equal(admission.acquired, playerDiscoveryRequests,
