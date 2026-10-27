@@ -35,8 +35,8 @@ export interface PubgPluginOptions<Ctx> {
    * envelope. Without it the plugin returns the envelope as before.
    */
   reply?: {
-    /** Worked examples / voice of the reply guide; default is Lab's (Kurisu). */
-    guide?: ReplyGuideProvider;
+    /** Worked examples / voice of the reply guide for this request; default is Lab's (Kurisu). */
+    guide?(ctx: Ctx): ReplyGuideProvider | undefined;
     /** What the member asked in this turn, so a bare record request ("今日战绩") is forced to the whole team. */
     request?(ctx: Ctx): string | undefined;
   };
@@ -82,7 +82,7 @@ export function createPubgPlugin<Ctx>(options: PubgPluginOptions<Ctx>): Plugin<C
         envelope,
         access.timezone ?? 'Asia/Shanghai',
         access.share?.(spec.name),
-        options.reply.guide,
+        options.reply.guide?.(ctx),
       );
       await access.afterReply?.();
       return reply;
