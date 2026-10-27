@@ -1,0 +1,988 @@
+{
+  "pubg_resolve_players": {
+    "description": "Resolve configured PUBG players and aliases, or look up one exact official player name.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "team": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "pubg_search_matches": {
+    "description": "Search bounded PUBG matches and return a fresh resultSetId for follow-up facts or review. Not for 今日/昨日/本周战绩 record requests (use pubg_query_stats).",
+    "input": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "gameMode": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "mapName": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "pageSize": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "recentN": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "businessDayStart": {
+                  "type": "string",
+                  "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                },
+                "from": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "timezone": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "type": {
+                  "enum": [
+                    "time_range"
+                  ]
+                }
+              },
+              "required": [
+                "from",
+                "to",
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "type": {
+                  "enum": [
+                    "relative_period"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              },
+              "required": [
+                "type",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "sort": {
+          "enum": [
+            "asc",
+            "desc"
+          ]
+        },
+        "team": {
+          "type": "boolean"
+        },
+        "timezone": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "to": {
+          "type": "string",
+          "maxLength": 128
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "pubg_query_stats": {
+    "description": "Query deterministic PUBG aggregates for a bounded selector and return validated presentation/displayText.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "groupBy": {
+          "enum": [
+            "day",
+            "map",
+            "match",
+            "mode",
+            "player",
+            "team"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "assists",
+              "avg_damage",
+              "chicken_index",
+              "damage",
+              "dbnos",
+              "deaths",
+              "headshot_kills",
+              "kd",
+              "kills",
+              "longest_kill",
+              "matches",
+              "performance_score",
+              "rank",
+              "revives",
+              "survival_time",
+              "top10",
+              "wins"
+            ]
+          }
+        },
+        "operation": {
+          "enum": [
+            "detail",
+            "list",
+            "rank",
+            "report",
+            "strongest",
+            "trend",
+            "weakest"
+          ]
+        },
+        "orderBy": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "metric": {
+              "enum": [
+                "assists",
+                "avg_damage",
+                "chicken_index",
+                "damage",
+                "dbnos",
+                "deaths",
+                "headshot_kills",
+                "kd",
+                "kills",
+                "longest_kill",
+                "matches",
+                "performance_score",
+                "rank",
+                "revives",
+                "survival_time",
+                "top10",
+                "wins"
+              ]
+            }
+          },
+          "required": [
+            "direction",
+            "metric"
+          ],
+          "additionalProperties": false
+        },
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "businessDayStart": {
+                  "type": "string",
+                  "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                },
+                "from": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "timezone": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "type": {
+                  "enum": [
+                    "time_range"
+                  ]
+                }
+              },
+              "required": [
+                "from",
+                "to",
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 1000
+                },
+                "type": {
+                  "enum": [
+                    "last_n_matches"
+                  ]
+                }
+              },
+              "required": [
+                "count",
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "type": {
+                  "enum": [
+                    "relative_period"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              },
+              "required": [
+                "type",
+                "value"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "resultSetId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 256
+                },
+                "type": {
+                  "enum": [
+                    "result_set"
+                  ]
+                }
+              },
+              "required": [
+                "resultSetId",
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "team": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "metrics",
+        "selector"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "pubg_compare_stats": {
+    "description": "Compare two bounded PUBG segments and return independent source ranges with validated presentation/displayText.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "groupBy": {
+          "enum": [
+            "day",
+            "map",
+            "mode",
+            "player",
+            "team"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "metrics": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "enum": [
+              "assists",
+              "avg_damage",
+              "chicken_index",
+              "damage",
+              "dbnos",
+              "deaths",
+              "headshot_kills",
+              "kd",
+              "kills",
+              "longest_kill",
+              "matches",
+              "performance_score",
+              "rank",
+              "revives",
+              "survival_time",
+              "top10",
+              "wins"
+            ]
+          }
+        },
+        "orderBy": {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "enum": [
+                "asc",
+                "desc"
+              ]
+            },
+            "metric": {
+              "enum": [
+                "assists",
+                "avg_damage",
+                "chicken_index",
+                "damage",
+                "dbnos",
+                "deaths",
+                "headshot_kills",
+                "kd",
+                "kills",
+                "longest_kill",
+                "matches",
+                "performance_score",
+                "rank",
+                "revives",
+                "survival_time",
+                "top10",
+                "wins"
+              ]
+            }
+          },
+          "required": [
+            "direction",
+            "metric"
+          ],
+          "additionalProperties": false
+        },
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "segments": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "selector": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "businessDayStart": {
+                        "type": "string",
+                        "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                      },
+                      "from": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "timezone": {
+                        "type": "string",
+                        "maxLength": 128
+                      },
+                      "to": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      },
+                      "type": {
+                        "enum": [
+                          "time_range"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "count": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1000
+                      },
+                      "type": {
+                        "enum": [
+                          "last_n_matches"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "count",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "maxLength": 128
+                      },
+                      "type": {
+                        "enum": [
+                          "relative_period"
+                        ]
+                      },
+                      "value": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "resultSetId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 256
+                      },
+                      "type": {
+                        "enum": [
+                          "result_set"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "resultSetId",
+                      "type"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "required": [
+              "label",
+              "selector"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "team": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "metrics",
+        "segments"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "pubg_get_match": {
+    "description": "Get one selected PUBG Match API record and return validated presentation/displayText.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "team": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "matchId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "pubg_get_review_facts": {
+    "description": "Get deterministic Telemetry facts for one selected match from a fresh search resultSetId; return validated presentation/displayText.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "matchId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "searchResultSetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "team": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "matchId",
+        "searchResultSetId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "pubg_get_period_review": {
+    "description": "Build a bounded multi-match review from a fresh search resultSetId; Domain owns order, freshness, and partial coverage.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "personIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerIds": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "playerNames": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "searchResultSetId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "team": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "searchResultSetId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "pubg_query_team_damage": {
+    "description": "Query bounded directional team-damage facts; provide actor/victim together or omit both.",
+    "input": {
+      "type": "object",
+      "properties": {
+        "actorPlayer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "meleeKind": {
+          "enum": [
+            "KICK",
+            "OTHER",
+            "PUNCH"
+          ]
+        },
+        "refresh": {
+          "type": "boolean"
+        },
+        "selector": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "businessDayStart": {
+                  "type": "string",
+                  "pattern": "^(?:[01][0-9]|2[0-3]):[0-5][0-9]$"
+                },
+                "from": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "timezone": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "to": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "type": {
+                  "enum": [
+                    "time_range"
+                  ]
+                }
+              },
+              "required": [
+                "from",
+                "to",
+                "type"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "type": {
+                  "enum": [
+                    "relative_period"
+                  ]
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                }
+              },
+              "required": [
+                "type",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "sessionId": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "source": {
+          "enum": [
+            "EXPLOSIVE",
+            "GUN",
+            "MELEE",
+            "VEHICLE"
+          ]
+        },
+        "victimPlayer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "selector"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

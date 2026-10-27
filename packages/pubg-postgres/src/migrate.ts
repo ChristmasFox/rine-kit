@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import type { Pool, PoolClient } from 'pg';
 
-const MIGRATIONS = ['0001_pubg_schema.sql', '0002_pubg_account_claims.sql'] as const;
+const MIGRATIONS = ['0001_pubg_schema.sql', '0002_pubg_account_claims.sql', '0003_review_shares.sql'] as const;
 const LOCK_ID = 7192041303;
 
 /** Applies the schema to an empty or existing database; safe to run on every start. */

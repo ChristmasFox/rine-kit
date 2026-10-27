@@ -6,6 +6,17 @@ export const DATABASE_URL = process.env.PUBG_POSTGRES_TEST_DATABASE_URL ?? proce
 /** Test-only stand-ins for what a host keeps: which room (channel) is bound to which team, and who may
  * ask about a team directly. The repository only asks the host's authorize() callback. */
 export async function createHostTables(pool: Pool): Promise<void> {
+  // Test files run in parallel against one database: two CREATE TABLE IF NOT EXISTS can race (pg_type unique violation).
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await createHostTablesOnce(pool);
+    } catch (error) {
+      if (attempt >= 3 || (error as { code?: string }).code !== '23505') throw error;
+    }
+  }
+}
+
+async function createHostTablesOnce(pool: Pool): Promise<void> {
   await pool.query(`CREATE TABLE IF NOT EXISTS test_bindings (
     tenant_id TEXT NOT NULL, team_id TEXT NOT NULL, channel_id TEXT NOT NULL PRIMARY KEY)`);
   await pool.query(`CREATE TABLE IF NOT EXISTS test_access (
