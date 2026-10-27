@@ -19,8 +19,8 @@ export interface AddressingRecord {
  */
 export const LAB_ROSTER_AUTHORITY = 'Arthur 审核过的长期设定';
 
-export function renderGroupRoster(
-  entries: readonly AddressingRecord[],
+export function renderGroupRoster<T extends AddressingRecord>(
+  entries: readonly T[],
   options: { authority?: string } = {},
 ): string | undefined {
   if (!entries.length) return undefined;
