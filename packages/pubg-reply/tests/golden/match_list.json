@@ -1,0 +1,103 @@
+{
+  "asOf": "2026-10-19T15:50:00.000Z",
+  "asOfLocal": "2026-10-19 23:50",
+  "metricVersion": "pubg-metrics-v1",
+  "coverage": {
+    "status": "OK",
+    "complete": true,
+    "coverageStart": "2026-10-18T22:00:00.000Z",
+    "coverageStartLocal": "06:00",
+    "coverageEnd": "2026-10-19T22:00:00.000Z",
+    "coverageEndLocal": "2026-10-20 06:00",
+    "checkedAt": "2026-10-19T15:50:00.000Z",
+    "checkedAtLocal": "23:50",
+    "failedMatchIds": [],
+    "sourceUnavailable": false,
+    "freshness": "fresh"
+  },
+  "status": "ok",
+  "data": {
+    "total": 1,
+    "matches": [
+      {
+        "matchId": "m1",
+        "createdAt": "2026-10-19T13:24:00.000Z",
+        "createdAtLocal": "21:24",
+        "mapName": "Desert_Main",
+        "gameMode": "squad",
+        "placement": 14,
+        "players": [
+          {
+            "name": "SG_LabmemNo004",
+            "kills": 0,
+            "damageDealt": 27.903175
+          }
+        ]
+      }
+    ]
+  },
+  "queryResolved": {
+    "tool": "pubg_search_matches",
+    "resolvedSelector": {
+      "type": "relative_period",
+      "value": "yesterday",
+      "from": "2026-10-18T22:00:00.000Z",
+      "fromLocal": "2026-10-19 06:00",
+      "to": "2026-10-19T22:00:00.000Z",
+      "toLocal": "2026-10-20 06:00",
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "evidenceRefs": {
+    "matchIds": [
+      "m1"
+    ],
+    "playerIds": [
+      "account.a",
+      "account.b",
+      "account.c"
+    ],
+    "fields": [],
+    "calculation": "fixture"
+  },
+  "resultSetId": "rs-fixture",
+  "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+  "dataUpdatedAtLocal": "2026-10-19 23:50",
+  "displayTimezone": "Asia/Shanghai",
+  "dataSourceRange": {
+    "from": "2026-10-18T22:00:00.000Z",
+    "to": "2026-10-19T22:00:00.000Z",
+    "timezone": "Asia/Shanghai",
+    "businessDayStart": null,
+    "fromLocal": "2026-10-19 06:00",
+    "toLocal": "2026-10-20 06:00",
+    "segments": []
+  },
+  "presentation": {
+    "status": "ok",
+    "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+    "sourceRange": {
+      "from": "2026-10-18T22:00:00.000Z",
+      "to": "2026-10-19T22:00:00.000Z"
+    },
+    "type": "pubg_match_list",
+    "headline": "PUBG 比赛列表",
+    "summary": "共 1 场比赛，当前返回 1 场。",
+    "matches": [
+      {
+        "matchId": "m1",
+        "startedAt": null,
+        "mapName": "Desert_Main",
+        "gameMode": "squad",
+        "placement": 14,
+        "summary": "SG_LabmemNo004 击杀0 伤害未知",
+        "evidenceRefs": []
+      }
+    ],
+    "evidenceRefs": [
+      "m1"
+    ]
+  },
+  "displayText": "🗂️ 10月19日星期一 四排对局列表\n\n共 1 场比赛，当前返回 1 场。\n\n1. 时间未知｜米拉玛｜**#14**\n  • SG_LabmemNo004 击杀0 伤害未知\n\n数据范围：2026-10-19 06:00 至 2026-10-20 06:00\n数据更新时间：23:50",
+  "replyGuide": "这是一份对局列表。回复保留 displayText 里每一局的序号、时间、地图、名次和每个人的击杀 / 伤害，名字换成名册称呼；\n开场一两句点名提问的人，结尾一两句点评（哪局最好、哪局最惨、谁最稳），只引用列表里的数字。\n如果用户是在问「只看四排 / 去掉双排后的 KD」这类问题，先说明列表的筛选条件，再按列表里的数字逐人算出结果，写清算法（例如 KD = 击杀 ÷ 死亡），不要编死亡数之类列表里没有的数字。"
+}

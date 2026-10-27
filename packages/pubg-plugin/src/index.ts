@@ -1,5 +1,13 @@
 import { definePlugin, type Plugin, type ToolDefinition } from '@rine-kit/plugin-sdk';
 import type { PubgDomainService } from '@rine-kit/pubg-domain';
+import {
+  forceTeamScope,
+  isBareRecordRequest,
+  jsonToolResult,
+  pubgChatRules,
+  type ReplyGuideProvider,
+  type ShareAppender,
+} from '@rine-kit/pubg-reply';
 import { PUBG_TOOLS, runPubgTool, type PubgSubjectHost } from '@rine-kit/pubg-tools';
 
 /** What the host decides for one request from its trusted context. */
@@ -10,11 +18,28 @@ export interface PubgAccess {
   host: PubgSubjectHost;
   /** Names the conversation so result sets stay private to it. */
   sessionId: string;
+  /** IANA zone the answers are written in ("today" and clock times). Default Asia/Shanghai, as in Lab. */
+  timezone?: string;
+  /** Appends a share link to a query answer; absent = no link (the answer then has no 🔗 line). */
+  share?: ShareAppender;
 }
 
 export interface PubgPluginOptions<Ctx> {
   /** May look the team up (a database read); the tools wait for it. */
   access(ctx: Ctx): PubgAccess | Promise<PubgAccess>;
+  /**
+   * Deliver results the way Lab does: every tool result carries the validated `presentation`, the chat-layout
+   * `displayText` and the `replyGuide` (and `replyLink` when a share link was issued) instead of the bare Domain
+   * envelope. Without it the plugin returns the envelope as before.
+   */
+  reply?: {
+    /** Worked examples / voice of the reply guide; default is Lab's (Kurisu). */
+    guide?: ReplyGuideProvider;
+    /** What the member asked in this turn, so a bare record request ("今日战绩") is forced to the whole team. */
+    request?(ctx: Ctx): string | undefined;
+  };
+  /** 'chat' puts Lab's full PUBG skill rules into the instructions (instead of the four-sentence summary). */
+  rules?: 'chat' | 'summary';
 }
 
 const INSTRUCTIONS = [
@@ -35,13 +60,33 @@ export function createPubgPlugin<Ctx>(options: PubgPluginOptions<Ctx>): Plugin<C
     input: spec.input,
     run: async (input, ctx, { signal }) => {
       const access = await options.access(ctx);
-      return runPubgTool(spec, input, {
+      let arguments_ = input;
+      if (options.reply?.request && spec.name === 'pubg_query_stats') {
+        // A bare record request names no one, so it is the whole team: drop any person the model carried over.
+        const scoped = isBareRecordRequest(options.reply.request(ctx))
+          ? forceTeamScope((input ?? {}) as Record<string, unknown>)
+          : undefined;
+        if (scoped) arguments_ = scoped as typeof input;
+      }
+      const envelope = await runPubgTool(spec, arguments_, {
         service: access.service,
         host: access.host,
         sessionId: access.sessionId,
         ...(signal ? { signal } : {}),
       });
+      if (!options.reply) return envelope;
+      return jsonToolResult(
+        spec.name,
+        envelope,
+        access.timezone ?? 'Asia/Shanghai',
+        access.share,
+        options.reply.guide,
+      );
     },
   }));
-  return definePlugin<Ctx>({ id: 'rine.pubg', instructions: INSTRUCTIONS, tools });
+  return definePlugin<Ctx>({
+    id: 'rine.pubg',
+    instructions: options.rules === 'chat' ? pubgChatRules() : INSTRUCTIONS,
+    tools,
+  });
 }

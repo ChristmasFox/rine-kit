@@ -1,0 +1,284 @@
+{
+  "asOf": "2026-10-19T15:50:00.000Z",
+  "asOfLocal": "2026-10-19 23:50",
+  "metricVersion": "pubg-metrics-v1",
+  "coverage": {
+    "status": "OK",
+    "complete": true,
+    "coverageStart": "2026-10-18T22:00:00.000Z",
+    "coverageStartLocal": "06:00",
+    "coverageEnd": "2026-10-19T22:00:00.000Z",
+    "coverageEndLocal": "2026-10-20 06:00",
+    "checkedAt": "2026-10-19T15:50:00.000Z",
+    "checkedAtLocal": "23:50",
+    "failedMatchIds": [],
+    "sourceUnavailable": false,
+    "freshness": "fresh"
+  },
+  "status": "ok",
+  "data": {
+    "direction": "all directions",
+    "totalHitCount": 9,
+    "totalDamage": 200.25,
+    "complete": true,
+    "directions": [
+      {
+        "actor": {
+          "playerId": "account.a",
+          "name": "SG_LabmemNo007"
+        },
+        "victim": {
+          "playerId": "account.b",
+          "name": "SG_LabmemNo004"
+        },
+        "hitCount": 5,
+        "damage": 120.5,
+        "complete": true
+      },
+      {
+        "actor": {
+          "playerId": "account.b",
+          "name": "SG_LabmemNo004"
+        },
+        "victim": {
+          "playerId": "account.a",
+          "name": "SG_LabmemNo007"
+        },
+        "hitCount": 3,
+        "damage": 60,
+        "complete": true
+      },
+      {
+        "actor": {
+          "playerId": "account.b",
+          "name": "SG_LabmemNo004"
+        },
+        "victim": {
+          "playerId": "account.c",
+          "name": "kim_kkl"
+        },
+        "hitCount": 1,
+        "damage": 19.75,
+        "complete": true
+      }
+    ],
+    "matches": [
+      {
+        "matchId": "m1",
+        "mapName": "Desert_Main",
+        "placement": 12,
+        "startedAtLocal": "21:01",
+        "teamDamage": [
+          {
+            "actorPlayerId": "account.a",
+            "victimPlayerId": "account.b",
+            "hitCount": 2,
+            "damage": 40,
+            "source": "MELEE",
+            "meleeKind": "KICK",
+            "weapon": "PlayerMale_A_C"
+          },
+          {
+            "actorPlayerId": "account.b",
+            "victimPlayerId": "account.c",
+            "hitCount": 1,
+            "damage": 19.75,
+            "source": "VEHICLE",
+            "weapon": "BP_PickupTruck_A_04_C"
+          }
+        ]
+      },
+      {
+        "matchId": "m2",
+        "mapName": "Neon_Main",
+        "placement": 4,
+        "startedAtLocal": "23:04",
+        "teamDamage": [
+          {
+            "actorPlayerId": "account.a",
+            "victimPlayerId": "account.b",
+            "hitCount": 3,
+            "damage": 80.5,
+            "source": "MELEE",
+            "meleeKind": "KICK",
+            "weapon": "PlayerMale_A_C"
+          },
+          {
+            "actorPlayerId": "account.b",
+            "victimPlayerId": "account.a",
+            "hitCount": 3,
+            "damage": 60,
+            "source": "MELEE",
+            "meleeKind": "KICK",
+            "weapon": "PlayerMale_A_C"
+          }
+        ]
+      }
+    ]
+  },
+  "queryResolved": {
+    "tool": "pubg_query_team_damage",
+    "resolvedSelector": {
+      "type": "relative_period",
+      "value": "yesterday",
+      "from": "2026-10-18T22:00:00.000Z",
+      "fromLocal": "2026-10-19 06:00",
+      "to": "2026-10-19T22:00:00.000Z",
+      "toLocal": "2026-10-20 06:00",
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "evidenceRefs": {
+    "matchIds": [
+      "m1",
+      "m2"
+    ],
+    "playerIds": [
+      "account.a",
+      "account.b",
+      "account.c"
+    ],
+    "fields": [],
+    "calculation": "fixture"
+  },
+  "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+  "dataUpdatedAtLocal": "2026-10-19 23:50",
+  "displayTimezone": "Asia/Shanghai",
+  "dataSourceRange": {
+    "from": "2026-10-18T22:00:00.000Z",
+    "to": "2026-10-19T22:00:00.000Z",
+    "timezone": "Asia/Shanghai",
+    "businessDayStart": null,
+    "fromLocal": "2026-10-19 06:00",
+    "toLocal": "2026-10-20 06:00",
+    "segments": []
+  },
+  "presentation": {
+    "status": "ok",
+    "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+    "sourceRange": {
+      "from": "2026-10-18T22:00:00.000Z",
+      "to": "2026-10-19T22:00:00.000Z"
+    },
+    "type": "pubg_team_damage",
+    "headline": "PUBG 队友动作/误伤",
+    "direction": "all directions",
+    "source": null,
+    "meleeKind": null,
+    "totalHitCount": 9,
+    "totalDamage": 200.25,
+    "directions": [
+      {
+        "actor": "SG_LabmemNo007",
+        "victim": "SG_LabmemNo004",
+        "hitCount": 5,
+        "damage": 120.5,
+        "complete": true,
+        "evidenceRefs": []
+      },
+      {
+        "actor": "SG_LabmemNo004",
+        "victim": "SG_LabmemNo007",
+        "hitCount": 3,
+        "damage": 60,
+        "complete": true,
+        "evidenceRefs": []
+      },
+      {
+        "actor": "SG_LabmemNo004",
+        "victim": "kim_kkl",
+        "hitCount": 1,
+        "damage": 19.75,
+        "complete": true,
+        "evidenceRefs": []
+      }
+    ],
+    "ledger": {
+      "sources": [
+        {
+          "label": "飞踢",
+          "hitCount": 8,
+          "damage": 180.5
+        },
+        {
+          "label": "皮卡撞击",
+          "hitCount": 1,
+          "damage": 19.75
+        }
+      ],
+      "directionSources": [
+        [
+          {
+            "label": "飞踢",
+            "hitCount": 5,
+            "damage": 120.5
+          }
+        ],
+        [
+          {
+            "label": "飞踢",
+            "hitCount": 3,
+            "damage": 60
+          }
+        ],
+        [
+          {
+            "label": "皮卡撞击",
+            "hitCount": 1,
+            "damage": 19.75
+          }
+        ]
+      ],
+      "highlights": [
+        {
+          "label": "第 2 局（荣都 #4，23:04）",
+          "hitCount": 6,
+          "damage": 140.5,
+          "pairs": [
+            {
+              "actor": "SG_LabmemNo007",
+              "victim": "SG_LabmemNo004",
+              "hitCount": 3,
+              "damage": 80.5
+            },
+            {
+              "actor": "SG_LabmemNo004",
+              "victim": "SG_LabmemNo007",
+              "hitCount": 3,
+              "damage": 60
+            }
+          ]
+        },
+        {
+          "label": "第 1 局（米拉玛 #12，21:01）",
+          "hitCount": 3,
+          "damage": 59.75,
+          "pairs": [
+            {
+              "actor": "SG_LabmemNo007",
+              "victim": "SG_LabmemNo004",
+              "hitCount": 2,
+              "damage": 40
+            },
+            {
+              "actor": "SG_LabmemNo004",
+              "victim": "kim_kkl",
+              "hitCount": 1,
+              "damage": 19.75
+            }
+          ]
+        }
+      ],
+      "quiet": [
+        "kim_kkl"
+      ]
+    },
+    "summary": "共 3 个方向。",
+    "evidenceRefs": [
+      "m1",
+      "m2"
+    ]
+  },
+  "displayText": "🥊 10月19日星期一 队内误伤账本\n\n• 总误伤：**200.3 点**\n• 总命中：**9 次**（飞踢 8 次、皮卡撞击 1 次）\n\n───\n\n**互相伤害明细（共 3 个方向）：**\n1. **SG_LabmemNo007 ➡️ SG_LabmemNo004**\n  • 总输出：**5 次命中，造成 120.5 伤害**（飞踢 5 次）\n2. **SG_LabmemNo004 ➡️ SG_LabmemNo007**\n  • 总输出：**3 次命中，造成 60 伤害**（飞踢 3 次）\n3. **SG_LabmemNo004 ➡️ kim_kkl**\n  • 总输出：**1 次命中，造成 19.8 伤害**（皮卡撞击 1 次）\n\n───\n\n**名场面：**\n• 第 2 局（荣都 #4，23:04）：单局 **140.5 点（6 次命中）**：SG_LabmemNo007 ➡️ SG_LabmemNo004 3 次 80.5 点；SG_LabmemNo004 ➡️ SG_LabmemNo007 3 次 60 点\n• 第 1 局（米拉玛 #12，21:01）：单局 **59.8 点（3 次命中）**：SG_LabmemNo007 ➡️ SG_LabmemNo004 2 次 40 点；SG_LabmemNo004 ➡️ kim_kkl 1 次 19.8 点\n\n清白名单：kim_kkl（0 次主动队内输出）\n\n数据范围：2026-10-19 06:00 至 2026-10-20 06:00\n数据更新时间：23:50",
+  "replyGuide": "这是一份队内误伤（队友互相伤害）账本。回复写成完整的「对账」战报，不要压缩成几行短列表：\n1. 开场一两句人设口吻：点名提问的人，接上他刚说的话或当天的梗。\n2. 总账：保留 displayText 的总误伤、总命中和括号里的分类（飞踢 / 重拳 / 载具撞击 / 走火）。\n3. 「互相伤害明细」逐条保留每个方向：名字换成名册称呼、括号保留 PUBG 账号，可以给方向起一个小标题；\n   每条下面保留「总输出：N 次命中，造成 X 伤害（分类）」，再补一句只引用这条数字的吐槽。\n   两个人互相打时，算出两人对攻合计和占全队误伤的比例（只用 displayText 的数字计算）。\n4. 有「名场面」时原样保留每一局的局号、地图、名次和每个方向的次数与伤害，再加一句画面感的描述（不要编位置、时机等数据里没有的细节）。\n5. 有清白名单时点名表扬一句（0 次主动队内输出）。\n6. 总结两三句：谁是内耗核心、谁挨打最多，落在称呼上收尾。\n没有任何方向时，直接说这段时间没有队内误伤记录，不要编。数据不完整时说明哪些未知，不要把未知当 0。\n\n写法示例（数字仅示意）：\n……刚自封完「天上天下唯我独尊」，一转头就来对账了是吧，变态猴！\n\n🥊 10月18日星期日 队内误伤账本\n• 总误伤：**738.8 点**\n• 总命中：**37 次**（飞踢 33 次、重拳 2 次、小轿车撞击 2 次）\n\n───\n\n**互相伤害明细（共 4 个方向）：**\n1. **狂气压制：Arthur（SG_LabmemNo007） ➡️ 变态猴（SG_LabmemNo004）**\n  • 总输出：**16 次命中，造成 334.7 伤害**（飞踢 16 次）\n  • 狂气所长只要近身，脚尖就焊死在你身上，单向对内输出全场最高！\n2. **疯狂反扑：变态猴（SG_LabmemNo004） ➡️ Arthur（SG_LabmemNo007）**\n  • 总输出：**16 次命中，造成 267.0 伤害**（飞踢 14 次、重拳 2 次）\n  • 你们俩今天整整 32 次肉搏互换，对攻 601.7 点，占全队内讧的 81%！\n\n───\n\n**名场面：**\n• 第 9 局（米拉玛 #12，21:01）：单局 **263.5 点（12 次命中）**：Arthur ➡️ 变态猴 7 次 174.5 点；变态猴 ➡️ Arthur 5 次 89.0 点。两人踢得尘土飞扬！\n\n清白名单：打工战士今天继续保持清白，0 次主动队内输出。\n\n总结：对外你是 MVP，对内你挨了 334 点、还了 267 点，稳稳领跑全场内耗核心！账本焊死在这了，赶紧关机睡觉去，最强肉盾猴！"
+}

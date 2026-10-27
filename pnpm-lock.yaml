@@ -209,6 +209,9 @@ importers:
       '@rine-kit/pubg-domain':
         specifier: workspace:*
         version: link:../pubg-domain
+      '@rine-kit/pubg-reply':
+        specifier: workspace:*
+        version: link:../pubg-reply
       '@rine-kit/pubg-tools':
         specifier: workspace:*
         version: link:../pubg-tools
@@ -241,6 +244,25 @@ importers:
       '@types/pg':
         specifier: ^8.11.10
         version: 8.23.1
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
+
+  packages/pubg-reply:
+    dependencies:
+      '@rine-kit/presentation':
+        specifier: workspace:*
+        version: link:../presentation
+      '@rine-kit/pubg-domain':
+        specifier: workspace:*
+        version: link:../pubg-domain
+    devDependencies:
+      '@types/node':
+        specifier: ^26.6.5
+        version: 26.6.5
       tsx:
         specifier: ^4.23.15
         version: 4.23.15

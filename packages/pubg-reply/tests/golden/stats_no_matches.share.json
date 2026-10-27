@@ -1,0 +1,82 @@
+{
+  "asOf": "2026-10-19T15:50:00.000Z",
+  "asOfLocal": "2026-10-19 23:50",
+  "metricVersion": "pubg-metrics-v1",
+  "coverage": {
+    "status": "OK",
+    "complete": true,
+    "coverageStart": "2026-10-18T22:00:00.000Z",
+    "coverageStartLocal": "06:00",
+    "coverageEnd": "2026-10-19T22:00:00.000Z",
+    "coverageEndLocal": "2026-10-20 06:00",
+    "checkedAt": "2026-10-19T15:50:00.000Z",
+    "checkedAtLocal": "23:50",
+    "failedMatchIds": [],
+    "sourceUnavailable": false,
+    "freshness": "fresh"
+  },
+  "status": "no_matches",
+  "data": {
+    "operation": "report",
+    "groupBy": "player",
+    "summary": {
+      "uniqueMatchCount": 0
+    },
+    "rows": []
+  },
+  "queryResolved": {
+    "tool": "pubg_query_stats",
+    "resolvedSelector": {
+      "type": "relative_period",
+      "value": "today",
+      "from": "2026-10-18T22:00:00.000Z",
+      "fromLocal": "2026-10-19 06:00",
+      "to": "2026-10-19T22:00:00.000Z",
+      "toLocal": "2026-10-20 06:00",
+      "timezone": "Asia/Shanghai"
+    }
+  },
+  "evidenceRefs": {
+    "matchIds": [],
+    "playerIds": [
+      "account.a",
+      "account.b",
+      "account.c"
+    ],
+    "fields": [],
+    "calculation": "fixture"
+  },
+  "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+  "dataUpdatedAtLocal": "2026-10-19 23:50",
+  "displayTimezone": "Asia/Shanghai",
+  "dataSourceRange": {
+    "from": "2026-10-18T22:00:00.000Z",
+    "to": "2026-10-19T22:00:00.000Z",
+    "timezone": "Asia/Shanghai",
+    "businessDayStart": null,
+    "fromLocal": "2026-10-19 06:00",
+    "toLocal": "2026-10-20 06:00",
+    "segments": []
+  },
+  "presentation": {
+    "status": "no_matches",
+    "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+    "sourceRange": {
+      "from": "2026-10-18T22:00:00.000Z",
+      "to": "2026-10-19T22:00:00.000Z"
+    },
+    "type": "pubg_stats",
+    "headline": "PUBG 战绩",
+    "operation": "report",
+    "groupBy": "player",
+    "summary": "没有找到符合条件的比赛。\n共 0 场。",
+    "rows": [],
+    "evidenceRefs": []
+  },
+  "displayText": "🏆 PUBG 战绩\n\n没有找到符合条件的比赛。\n共 0 场。\n\n数据范围：2026-10-19 06:00 至 2026-10-20 06:00\n数据更新时间：23:50\n\n🔗 https://share.example/s/AAAAAAAAAAAAAAAAAAAAAA",
+  "replyGuide": "没有找到符合条件的比赛：用人设口吻如实说明查询的时间范围里没有对局（可以吐槽一句），不要编任何数字，也不要拿以前的战绩代替。",
+  "replyLink": {
+    "kind": "share",
+    "url": "https://share.example/s/AAAAAAAAAAAAAAAAAAAAAA"
+  }
+}

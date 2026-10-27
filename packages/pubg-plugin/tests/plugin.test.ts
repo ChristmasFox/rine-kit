@@ -104,3 +104,60 @@ test('the PUBG tools run through the plugin SDK for the tenant the host authoris
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('with the reply option a result carries displayText and replyGuide, and a bare record request is the whole team', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'pubg-plugin-reply-'));
+  const repository = new SqlitePubgRepository(join(root, 'a.sqlite'));
+  try {
+    repository.upsertMatches(golden.matches);
+    const context = createTeamContext('tenant-a', team('squad-a', 'p1', 'p2'));
+    const service = new PubgDomainService({
+      teamContext: context,
+      repository: new SqlitePubgRepositoryAdapter(repository, context),
+      now: () => new Date('2026-09-17T00:00:00.000Z'),
+    });
+    let asked = '今日战绩';
+    const registry = new PluginRegistry<Ctx>().register(
+      createPubgPlugin<Ctx>({
+        rules: 'chat',
+        reply: { request: () => asked },
+        access: () => ({
+          service,
+          host: { self: async () => ({ playerIds: ['p1'] }) },
+          sessionId: 'session',
+        }),
+      }),
+    );
+    assert.match(registry.instructions()[0]!, /Mandatory identity-first dispatch/u);
+    assert.doesNotMatch(registry.instructions()[0]!, /pubg_prefetch_telemetry/u);
+    const tool = registry.tools().find((t) => t.tool.name === 'pubg_query_stats')!.tool;
+    const input = {
+      selector: {
+        type: 'time_range',
+        from: '2026-09-15T00:00:00.000Z',
+        to: '2026-09-17T00:00:00.000Z',
+      },
+      metrics: ['matches', 'kills'],
+      operation: 'report',
+      groupBy: 'player',
+      refresh: false,
+    };
+    const run = async (extra: object) =>
+      (await tool.run(tool.input.parse({ ...input, ...extra }), { tenant: 'tenant-a', userId: 'u1' }, {})) as Record<
+        string,
+        unknown
+      >;
+    // The model carried a person over from earlier chat into a bare "今日战绩": still the team.
+    const bare = await run({ playerIds: ['p1'] });
+    assert.equal(typeof bare.displayText, 'string');
+    assert.equal(typeof bare.replyGuide, 'string');
+    assert.equal((bare.data as { rows: unknown[] }).rows.length, 2);
+    // A named request keeps the person.
+    asked = '我的战绩';
+    const mine = await run({ playerIds: ['p1'] });
+    assert.equal((mine.data as { rows: unknown[] }).rows.length, 1);
+  } finally {
+    repository.close();
+    rmSync(root, { recursive: true, force: true });
+  }
+});

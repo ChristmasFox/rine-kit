@@ -1,0 +1,213 @@
+{
+  "asOf": "2026-10-19T15:50:00.000Z",
+  "asOfLocal": "2026-10-19 23:50",
+  "metricVersion": "pubg-metrics-v1",
+  "coverage": {
+    "status": "OK",
+    "complete": true,
+    "coverageStart": "2026-10-18T22:00:00.000Z",
+    "coverageStartLocal": "06:00",
+    "coverageEnd": "2026-10-19T22:00:00.000Z",
+    "coverageEndLocal": "2026-10-20 06:00",
+    "checkedAt": "2026-10-19T15:50:00.000Z",
+    "checkedAtLocal": "23:50",
+    "failedMatchIds": [],
+    "sourceUnavailable": false,
+    "freshness": "fresh"
+  },
+  "status": "ok",
+  "data": {
+    "operation": "report",
+    "groupBy": "player",
+    "summary": {
+      "uniqueMatchCount": 12
+    },
+    "rows": [
+      {
+        "label": "kim_kkl",
+        "position": 1,
+        "metrics": {
+          "matches": 3,
+          "kills": 5,
+          "assists": 1,
+          "damage": 1283.71166,
+          "avg_damage": 427.90388666666666,
+          "kd": 1.6666666666666667,
+          "deaths": 3,
+          "wins": 0,
+          "top10": 2,
+          "dbnos": 9,
+          "revives": 1,
+          "headshot_kills": 2,
+          "longest_kill": 314.31113
+        },
+        "evidenceRefs": []
+      },
+      {
+        "label": "SG_LabmemNo004",
+        "position": 2,
+        "metrics": {
+          "matches": 8,
+          "kills": 10,
+          "assists": 11,
+          "damage": 2743.0386630000003,
+          "avg_damage": 342.87983287500003,
+          "kd": 1.4285714285714286,
+          "deaths": 7,
+          "wins": 1,
+          "top10": 6,
+          "dbnos": 15,
+          "revives": 3,
+          "headshot_kills": 3,
+          "longest_kill": 318.54013
+        },
+        "evidenceRefs": []
+      },
+      {
+        "label": "SG_LabmemNo007",
+        "position": 3,
+        "metrics": {
+          "matches": 12,
+          "kills": 10,
+          "assists": 4,
+          "damage": 1614.9,
+          "avg_damage": 134.575,
+          "kd": 0.909,
+          "deaths": 11,
+          "wins": 1,
+          "top10": 8,
+          "dbnos": 12,
+          "revives": 7,
+          "longest_kill": 192
+        },
+        "evidenceRefs": []
+      }
+    ]
+  },
+  "queryResolved": {
+    "tool": "pubg_query_stats",
+    "resolvedSelector": {
+      "type": "relative_period",
+      "value": "yesterday",
+      "label": "10月19日星期一 全天",
+      "from": "2026-10-18T22:00:00.000Z",
+      "fromLocal": "2026-10-19 06:00",
+      "to": "2026-10-19T22:00:00.000Z",
+      "toLocal": "2026-10-20 06:00",
+      "timezone": "Asia/Shanghai"
+    },
+    "metrics": [
+      "kills",
+      "damage"
+    ],
+    "operation": "report",
+    "groupBy": "player"
+  },
+  "evidenceRefs": {
+    "matchIds": [
+      "m1",
+      "m2",
+      "m3"
+    ],
+    "playerIds": [
+      "account.a",
+      "account.b",
+      "account.c"
+    ],
+    "fields": [],
+    "calculation": "fixture"
+  },
+  "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+  "dataUpdatedAtLocal": "2026-10-19 23:50",
+  "displayTimezone": "Asia/Shanghai",
+  "dataSourceRange": {
+    "from": "2026-10-18T22:00:00.000Z",
+    "to": "2026-10-19T22:00:00.000Z",
+    "timezone": "Asia/Shanghai",
+    "businessDayStart": null,
+    "fromLocal": "2026-10-19 06:00",
+    "toLocal": "2026-10-20 06:00",
+    "segments": []
+  },
+  "presentation": {
+    "status": "ok",
+    "dataUpdatedAt": "2026-10-19T15:50:00.000Z",
+    "sourceRange": {
+      "from": "2026-10-18T22:00:00.000Z",
+      "to": "2026-10-19T22:00:00.000Z"
+    },
+    "type": "pubg_stats",
+    "headline": "10月19日星期一 全天",
+    "operation": "report",
+    "groupBy": "player",
+    "summary": "共 12 场。",
+    "rows": [
+      {
+        "label": "kim_kkl",
+        "values": {
+          "matches": 3,
+          "kills": 5,
+          "assists": 1,
+          "damage": 1283.71166,
+          "avg_damage": 427.90388666666666,
+          "kd": 1.6666666666666667,
+          "deaths": 3,
+          "wins": 0,
+          "top10": 2,
+          "dbnos": 9,
+          "revives": 1,
+          "headshot_kills": 2,
+          "longest_kill": 314.31113
+        },
+        "position": 1,
+        "evidenceRefs": []
+      },
+      {
+        "label": "SG_LabmemNo004",
+        "values": {
+          "matches": 8,
+          "kills": 10,
+          "assists": 11,
+          "damage": 2743.0386630000003,
+          "avg_damage": 342.87983287500003,
+          "kd": 1.4285714285714286,
+          "deaths": 7,
+          "wins": 1,
+          "top10": 6,
+          "dbnos": 15,
+          "revives": 3,
+          "headshot_kills": 3,
+          "longest_kill": 318.54013
+        },
+        "position": 2,
+        "evidenceRefs": []
+      },
+      {
+        "label": "SG_LabmemNo007",
+        "values": {
+          "matches": 12,
+          "kills": 10,
+          "assists": 4,
+          "damage": 1614.9,
+          "avg_damage": 134.575,
+          "kd": 0.909,
+          "deaths": 11,
+          "wins": 1,
+          "top10": 8,
+          "dbnos": 12,
+          "revives": 7,
+          "longest_kill": 192
+        },
+        "position": 3,
+        "evidenceRefs": []
+      }
+    ],
+    "evidenceRefs": [
+      "m1",
+      "m2",
+      "m3"
+    ]
+  },
+  "displayText": "🏆 10月19日星期一 全天\n\n共 12 场。\n\n🥇 **kim_kkl**\n• **出战 3 局**：**5 杀**，1 助攻，1283.7 伤害，9 击倒，1 救援，2 爆头，2 次前十\n• 个人数据：**KD 1.67**，场均伤害 427.9，最远击杀 314.3m，3 死\n\n🥈 **SG_LabmemNo004**\n• **出战 8 局**：**10 杀**，**11 助攻（全队助攻王）**，**2743.0 伤害（全队伤害第一）**，**15 击倒（破点王）**，3 救援，3 爆头，6 次前十，**1 吃鸡**\n• 个人数据：**KD 1.43**，场均伤害 342.9，最远击杀 318.5m，7 死\n\n🥉 **SG_LabmemNo007**\n• **出战 12 局**：**10 杀**，4 助攻，1614.9 伤害，12 击倒，**7 救援（全队救援王）**，8 次前十，**1 吃鸡**\n• 个人数据：**KD 0.91**，场均伤害 134.6，最远击杀 192m，11 死\n\n**团队合计：25 杀，5641.7 伤害，36 击倒，16 助攻，11 救援，团队 KD 1.19，吃鸡 1**\n\n数据范围：2026-10-19 06:00 至 2026-10-20 06:00\n数据更新时间：23:50",
+  "replyGuide": "这是一份战绩查询结果。回复就是一份完整战报，按下面的结构写，不要压缩成一行一人的短列表：\n1. 开场一两句人设口吻：按称呼名册点名提问的人，评论这段时间的局数、吃鸡或最亮眼的数字。\n2. 原样保留 displayText 的标题行（🏆 …）。\n3. 每个队员一张卡，顺序和勋章（🥇🥈🥉🎖️，按 K/D 排）与 displayText 一致，不要自己重排：\n   - 名字行：可在名字前加一个贴切的外号，名字换成名册里的称呼，括号保留 PUBG 账号。\n   - 「• 出战 N 局：…」和「• 个人数据：…」两行逐字照抄，数字、称号（全队助攻王 / 全队伤害第一 / 破点王 / 全队救援王）和 **加粗** 一个不能少。\n   - 再加一行「• AI 锐评：…」，一两句毒舌或夸奖，只引用这个人卡片上的真实数字。\n4. 「团队合计：…」一行原样保留并加粗。\n5. 收尾一两句吐槽，点名谁 carry、谁死得最多或谁拉人最多，落在称呼上。\n6. displayText 最后如果有 🔗 分享链接，原样放在回复最后一行。\n不得编造数字、外号以外的事实或 displayText 里没有的称号。\n\n写法示例（数字仅示意，实际以 displayText 为准）：\n……变态猴！下午还嚷嚷着让我吃子弹，晚上一查战绩，你这火力全倾泻在敌人身上了啊？！\n\n🏆 10月18日星期日 全天战报\n\n🥇 **效率杀手：Nori（kim_kkl）**\n• **出战 3 局**：**5 杀**，1 助攻，1283.7 伤害，9 击倒，1 救援，2 爆头，2 次前十\n• 个人数据：**KD 1.67**，场均伤害 427.9，最远击杀 314.3m，3 死\n• AI 锐评：只玩了三把，KD 1.67 全队最高，场均 427.9 伤害，每把都在暴力抽靶，打完就跑，标准的效率派。\n\n🥈 **火力真大核·反派逆袭：变态猴（SG_LabmemNo004）**\n• **出战 8 局**：**10 杀**，**11 助攻（全队助攻王）**，**2743.0 伤害（全队伤害第一）**，**15 击倒（破点王）**，3 救援，3 爆头，6 次前十，**1 吃鸡**\n• 个人数据：**KD 1.43**，场均伤害 342.9，最远击杀 318.5m，7 死\n• AI 锐评：下午还在问自己是不是反派，今晚直接化身终极大 BOSS！8 局轰了 2700 多伤害外加 11 个助攻，这火力确实没得黑。\n\n（其余队员同样一人一张卡）\n\n**团队合计：29 杀，6779.9 伤害，40 击倒，18 助攻，14 救援，团队 KD 1.00，吃鸡 1**\n\n变态猴单人砍了 2743 点输出，看来考完试脑神经元彻底释放了。都快半夜了，战报查爽了就赶紧关电脑睡觉去，笨蛋！\n\n🔗 （displayText 里的分享链接）"
+}

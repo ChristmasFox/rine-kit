@@ -15,6 +15,7 @@
   "dependencies": {
     "@rine-kit/plugin-sdk": "workspace:*",
     "@rine-kit/pubg-domain": "workspace:*",
+    "@rine-kit/pubg-reply": "workspace:*",
     "@rine-kit/pubg-tools": "workspace:*"
   },
   "devDependencies": {
