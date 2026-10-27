@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import { Pool } from 'pg';
-import { migratePubgDatabase, PostgresPubgRepository, PostgresPubgRosterStore } from '../src/index.js';
+import { migratePubgDatabase, PostgresPubgRepository, PostgresPubgRosterStore, PublicSyncQueue } from '../src/index.js';
 import { DATABASE_URL } from './helpers.js';
 
 const skip = !DATABASE_URL;
@@ -97,6 +97,39 @@ test('a team holds at most the roster limit', { skip }, async () => {
       /pubg_team_full/u,
     );
   } finally {
+    await pool.query('DELETE FROM pubg_tenants WHERE tenant_id=$1', [tenant]).catch(() => undefined);
+    await pool.end();
+  }
+});
+
+test('linking an account makes the team due now, also while a worker is syncing it (then it runs again right after)', { skip }, async () => {
+  const pool = new Pool({ connectionString: DATABASE_URL, max: 4 });
+  const suffix = randomUUID().replaceAll('-', '');
+  const tenant = `rj-${suffix}`;
+  const room = `room-${suffix}`;
+  const base = { tenantId: tenant, teamId: room, teamLabel: 'Room', shard: 'steam' };
+  const state = async () => (await pool.query<{ due: boolean; dirty: boolean; leased: boolean }>(
+    `SELECT next_attempt_at<=now() AS due, dirty_at IS NOT NULL AS dirty, lease_until>now() AS leased
+       FROM pubg_sync_jobs WHERE tenant_id=$1 AND team_id=$2`, [tenant, room])).rows[0]!;
+  try {
+    await migratePubgDatabase(pool);
+    const store = new PostgresPubgRosterStore(pool);
+    await store.claim({ ...base, actorId: 'u1', accountId: `account.a_${suffix}`, displayName: 'Alice' });
+    assert.deepEqual(await state(), { due: true, dirty: false, leased: null }, 'first link: job created, due now');
+    const queue = new PublicSyncQueue(pool, { leaseMs: 60_000 });
+    const job = await queue.claimTeam(tenant, room);
+    assert.ok(job);
+    await queue.complete(job, 3_600_000);
+    assert.equal((await state()).due, false, 'synced: next run is an hour away');
+
+    const running = await queue.claimTeam(tenant, room);
+    assert.ok(running);
+    await store.claim({ ...base, actorId: 'u2', accountId: `account.b_${suffix}`, displayName: 'Bob' });
+    assert.deepEqual(await state(), { due: false, dirty: true, leased: true }, 'linked mid-sync: remembered, lease untouched');
+    await queue.complete(running, 3_600_000);
+    assert.deepEqual(await state(), { due: true, dirty: false, leased: null }, 'the finished run leaves the team due now');
+  } finally {
+    await pool.query('DELETE FROM pubg_teams WHERE tenant_id=$1', [tenant]).catch(() => undefined);
     await pool.query('DELETE FROM pubg_tenants WHERE tenant_id=$1', [tenant]).catch(() => undefined);
     await pool.end();
   }

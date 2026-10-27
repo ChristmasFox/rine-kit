@@ -4,6 +4,7 @@
 import type { Pool, PoolClient } from 'pg';
 import { createTeamContext, type TeamContext } from '@rine-kit/pubg-domain/core';
 import { MAX_TEAM_ROSTER_SIZE } from './contracts/team-roster.js';
+import { requeueTeamJob } from './sync-queue.js';
 
 export interface PubgClaim {
   actorId: string;
@@ -103,12 +104,7 @@ export class PostgresPubgRosterStore {
          VALUES ($1,$2,$3,$4,$5)`,
         [input.tenantId, input.teamId, input.actorId, input.shard, input.accountId],
       );
-      await client.query(
-        `INSERT INTO pubg_sync_jobs(tenant_id,team_id) VALUES ($1,$2)
-         ON CONFLICT (tenant_id,team_id) DO UPDATE SET next_attempt_at=now(), updated_at=now()
-           WHERE pubg_sync_jobs.lease_token IS NULL`,
-        [input.tenantId, input.teamId],
-      );
+      await requeueTeamJob(client, input.tenantId, input.teamId);
     });
   }
 

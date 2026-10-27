@@ -76,6 +76,9 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
   const maxMatches = positiveInteger(env.PUBLIC_SYNC_MAX_MATCHES, 500, 1000);
   const maxTelemetryFetches = positiveInteger(env.PUBLIC_SYNC_MAX_TELEMETRY_FETCHES, 20, 50);
   const teamConcurrency = positiveInteger(env.PUBLIC_SYNC_TEAM_CONCURRENCY, 2, 16);
+  const catchupRaw = env.PUBLIC_SYNC_CATCHUP_MS?.trim();
+  // Hourly mode only: a team with telemetry still waiting is run again after this long (default 5 minutes; 0 = off).
+  const catchupDelayMs = hourly && catchupRaw !== '0' ? positiveInteger(catchupRaw, 5 * 60_000, 60 * 60_000) : undefined;
   const leaseMs = positiveInteger(env.PUBLIC_SYNC_LEASE_MS, 120_000, 15 * 60_000);
   const archiveDirectory = env.PUBLIC_TELEMETRY_ARCHIVE_DIR?.trim() || undefined;
   const pool = new Pool({ connectionString: databaseUrl, max: 4, connectionTimeoutMillis: 5000, idleTimeoutMillis: 10000, statement_timeout: 30_000 });
@@ -88,7 +91,8 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
   process.once('SIGTERM', onStop);
   try {
     const ready = await pool.query("SELECT 1 FROM pubg_schema_migrations WHERE migration_id='0001_pubg_schema.sql'");
-    if (!ready.rowCount) throw new Error('pubg_saas_schema_upgrade_required');
+    const current = await pool.query("SELECT 1 FROM pubg_schema_migrations WHERE migration_id='0004_sync_job_dirty.sql'");
+    if (!ready.rowCount || !current.rowCount) throw new Error('pubg_saas_schema_upgrade_required');
     healthServer = await startWorkerHealthServer();
     const metricsPort = positiveInteger(env.PUBG_SAAS_WORKER_METRICS_PORT, 9464, 65_535);
     metricsServer = await startWorkerMetricsServer(() => {
@@ -108,6 +112,7 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
       syncIntervalMs: intervalMs,
       leaseMs,
       ...(archiveDirectory ? { rawTelemetryArchive: new RawTelemetryArchive(await assertArchiveOutsideRepository(archiveDirectory, env.PUBLIC_SYNC_REPOSITORY_ROOT?.trim() || process.cwd())) } : {}),
+      ...(catchupDelayMs !== undefined ? { catchupDelayMs } : {}),
       ...(hourly ? { nextSyncDelayMs: (now: Date) => clampSyncDelayMs(nextHourlyPrefetchDelayMs(now, { timeZone, minute })) } : {}),
       onTeamError: code => process.stderr.write(`${code}\n`),
     });

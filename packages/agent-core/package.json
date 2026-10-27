@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/agent-core",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "description": "The reasoning loop of an AI participant: chat model over an OpenAI-compatible endpoint, plugin tools, one turn service for text and voice. No dependency on RINE's API, LiveKit or desktop.",
   "exports": {

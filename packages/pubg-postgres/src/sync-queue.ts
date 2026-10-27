@@ -30,6 +30,19 @@ interface CandidateRow extends QueryResultRow {
   attempt_count: number;
 }
 
+type Queryable = Pick<Pool, 'query'>;
+
+/** Makes the team's job due now. While a worker holds a live lease the job keeps its schedule but is marked
+ * dirty, so completing that lease runs the team again right away. Creates the job row when the team has none. */
+export async function requeueTeamJob(db: Queryable, tenantId: string, teamId: string): Promise<void> {
+  await db.query(`INSERT INTO pubg_sync_jobs(tenant_id,team_id) VALUES ($1,$2)
+    ON CONFLICT (tenant_id,team_id) DO UPDATE SET
+      next_attempt_at=CASE WHEN pubg_sync_jobs.lease_until>now() THEN pubg_sync_jobs.next_attempt_at ELSE now() END,
+      dirty_at=CASE WHEN pubg_sync_jobs.lease_until>now() THEN now() ELSE pubg_sync_jobs.dirty_at END,
+      last_error_code=CASE WHEN pubg_sync_jobs.lease_until>now() THEN pubg_sync_jobs.last_error_code ELSE NULL END,
+      updated_at=now()`, [tenantId, teamId]);
+}
+
 async function transaction<T>(pool: Pool, work: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
   try {
@@ -124,7 +137,7 @@ export class PublicSyncQueue {
         const leaseToken = randomBytes(24).toString('base64url');
         const claimed = await client.query(`UPDATE pubg_sync_jobs SET lease_token=$3,
           lease_until=now()+($4::BIGINT*interval '1 millisecond'),attempt_count=LEAST(attempt_count+1,32767),
-          updated_at=now() WHERE tenant_id=$1 AND team_id=$2 RETURNING attempt_count`,
+          dirty_at=NULL,updated_at=now() WHERE tenant_id=$1 AND team_id=$2 RETURNING attempt_count`,
         [candidate.tenant_id, candidate.team_id, leaseToken, this.leaseMs]);
         if (claimed.rowCount !== 1) throw new Error('public_sync_queue_claim_lost');
         jobs.push({
@@ -138,6 +151,38 @@ export class PublicSyncQueue {
     });
   }
 
+  /** Asks for the team to be synced again soon (a retry, or a new member). Safe while a worker is running it. */
+  async requeue(tenantId: string, teamId: string): Promise<void> {
+    await requeueTeamJob(this.pool, tenantId, teamId);
+  }
+
+  /** Leases one team now, due or not, unless a live lease holds it. Null: the team is unknown or busy. */
+  async claimTeam(tenantId: string, teamId: string): Promise<PublicSyncJob | null> {
+    return transaction(this.pool, async (client) => {
+      await client.query(`INSERT INTO pubg_sync_jobs(tenant_id,team_id)
+        SELECT tenant_id,team_id FROM pubg_teams WHERE tenant_id=$1 AND team_id=$2
+        ON CONFLICT (tenant_id,team_id) DO NOTHING`, [tenantId, teamId]);
+      const leaseToken = randomBytes(24).toString('base64url');
+      const claimed = await client.query<{ attempt_count: number }>(`UPDATE pubg_sync_jobs SET lease_token=$3,
+        lease_until=now()+($4::BIGINT*interval '1 millisecond'),attempt_count=LEAST(attempt_count+1,32767),
+        dirty_at=NULL,updated_at=now()
+        WHERE tenant_id=$1 AND team_id=$2 AND (lease_until IS NULL OR lease_until<=now())
+          AND EXISTS (SELECT 1 FROM pubg_teams team WHERE team.tenant_id=$1 AND team.team_id=$2)
+        RETURNING attempt_count`, [tenantId, teamId, leaseToken, this.leaseMs]);
+      if (claimed.rowCount !== 1) return null;
+      return { tenantId, teamId, leaseToken, attemptCount: Number(claimed.rows[0]?.attempt_count ?? 1) };
+    });
+  }
+
+  /** Whether the team exists and a live lease currently holds its job. */
+  async leaseState(tenantId: string, teamId: string): Promise<'unknown' | 'leased' | 'free'> {
+    const row = await this.pool.query<{ leased: boolean }>(`SELECT COALESCE(job.lease_until>now(),false) AS leased
+      FROM pubg_teams team LEFT JOIN pubg_sync_jobs job ON job.tenant_id=team.tenant_id AND job.team_id=team.team_id
+      WHERE team.tenant_id=$1 AND team.team_id=$2`, [tenantId, teamId]);
+    if (!row.rowCount) return 'unknown';
+    return row.rows[0]?.leased ? 'leased' : 'free';
+  }
+
   async renew(job: PublicSyncJob): Promise<boolean> {
     const result = await this.pool.query(`UPDATE pubg_sync_jobs SET
       lease_until=now()+($4::BIGINT*interval '1 millisecond'),updated_at=now()
@@ -149,7 +194,9 @@ export class PublicSyncQueue {
   async complete(job: PublicSyncJob, intervalMs: number): Promise<boolean> {
     boundedInteger(intervalMs, 1_000, 24 * 60 * 60_000);
     const result = await this.pool.query(`UPDATE pubg_sync_jobs SET lease_token=NULL,lease_until=NULL,
-      attempt_count=0,last_error_code=NULL,next_attempt_at=now()+($4::BIGINT*interval '1 millisecond'),updated_at=now()
+      attempt_count=0,last_error_code=NULL,
+      next_attempt_at=CASE WHEN dirty_at IS NOT NULL THEN now() ELSE now()+($4::BIGINT*interval '1 millisecond') END,
+      dirty_at=NULL,updated_at=now()
       WHERE tenant_id=$1 AND team_id=$2 AND lease_token=$3 AND lease_until>now()`,
     [job.tenantId, job.teamId, job.leaseToken, intervalMs]);
     return result.rowCount === 1;
@@ -162,7 +209,9 @@ export class PublicSyncQueue {
     const code = /^[a-z0-9_]{1,64}$/u.test(errorCode) ? errorCode : 'public_sync_team_failed';
     const retryMs = Math.min(this.maxRetryMs, this.baseRetryMs * 2 ** Math.min(job.attemptCount - 1, 20));
     const result = await this.pool.query(`UPDATE pubg_sync_jobs SET lease_token=NULL,lease_until=NULL,
-      last_error_code=$4,next_attempt_at=now()+($5::BIGINT*interval '1 millisecond'),updated_at=now()
+      last_error_code=$4,
+      next_attempt_at=CASE WHEN dirty_at IS NOT NULL THEN now() ELSE now()+($5::BIGINT*interval '1 millisecond') END,
+      dirty_at=NULL,updated_at=now()
       WHERE tenant_id=$1 AND team_id=$2 AND lease_token=$3 AND lease_until>now()`,
     [job.tenantId, job.teamId, job.leaseToken, code, retryMs]);
     return result.rowCount === 1;

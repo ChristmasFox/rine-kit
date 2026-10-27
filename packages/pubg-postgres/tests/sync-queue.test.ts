@@ -91,3 +91,89 @@ test('public sync queue rejects an unbounded claim batch', async () => {
   const queue = new PublicSyncQueue({} as Pool);
   await assert.rejects(queue.claimDue(65), /public_sync_queue_config_invalid/u);
 });
+
+test('a roster change or retry while a worker holds the team runs the team again right after, not at the next slot', { skip: !databaseUrl }, async () => {
+  const admin = new Pool({ connectionString: databaseUrl, max: 1 });
+  const schema = `public_sync_dirty_${randomUUID().replaceAll('-', '')}`;
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  const pool = new Pool({ connectionString: databaseUrl, options: `-c search_path=${schema}`, max: 4 });
+  const tenant = `dirty-tenant-${randomUUID().replaceAll('-', '')}`;
+  const nextAttempt = async (team: string) => (await pool.query<{ due: boolean; dirty: boolean }>(
+    `SELECT next_attempt_at<=now() AS due, dirty_at IS NOT NULL AS dirty FROM pubg_sync_jobs WHERE tenant_id=$1 AND team_id=$2`,
+    [tenant, team],
+  )).rows[0]!;
+  try {
+    await migratePubgDatabase(pool);
+    await pool.query('INSERT INTO pubg_tenants(tenant_id) VALUES ($1)', [tenant]);
+    await pool.query(`INSERT INTO pubg_teams(tenant_id,team_id,label,pubg_shard) VALUES ($1,'busy','B','steam'),($1,'idle','I','steam')`, [tenant]);
+    const queue = new PublicSyncQueue(pool, { leaseMs: 60_000 });
+    await queue.ensureTeams();
+
+    // 1. A worker holds "busy"; a member links: the lease keeps the schedule, the change is remembered.
+    const [job] = await queue.claimDue(1);
+    assert.ok(job);
+    const held = job.teamId;
+    const other = held === 'busy' ? 'idle' : 'busy';
+    await pool.query(`UPDATE pubg_sync_jobs SET next_attempt_at=now()+interval '30 minutes' WHERE tenant_id=$1 AND team_id=$2`, [tenant, held]);
+    await queue.requeue(tenant, held);
+    assert.deepEqual(await nextAttempt(held), { due: false, dirty: true },
+      'a live lease keeps next_attempt_at and records the change');
+    // completing normally would push the team an hour away; the remembered change makes it due now instead
+    assert.equal(await queue.complete(job, 3_600_000), true);
+    assert.deepEqual(await nextAttempt(held), { due: true, dirty: false });
+    assert.equal((await queue.claimDue(2)).filter((j) => j.teamId === held).length, 1, 'due again at once');
+
+    // 2. Nothing changed during the lease: the normal schedule applies (and the failure path behaves the same way).
+    await pool.query(`UPDATE pubg_sync_jobs SET lease_token=NULL,lease_until=NULL,next_attempt_at=now() WHERE tenant_id=$1 AND team_id=$2`, [tenant, other]);
+    const [again] = (await queue.claimDue(2)).filter((j) => j.teamId === other);
+    assert.ok(again);
+    assert.equal(await queue.complete(again, 3_600_000), true);
+    assert.deepEqual(await nextAttempt(other), { due: false, dirty: false });
+
+    // 3. A team whose lease is free is simply made due now (retry), error cleared.
+    await queue.requeue(tenant, other);
+    assert.deepEqual(await nextAttempt(other), { due: true, dirty: false });
+
+    // 4. A failure during which a change arrived also retries at once instead of backing off.
+    await pool.query(`UPDATE pubg_sync_jobs SET lease_token=NULL,lease_until=NULL WHERE tenant_id=$1 AND team_id=$2`, [tenant, held]);
+    const failing = await queue.claimTeam(tenant, held);
+    assert.ok(failing);
+    await queue.requeue(tenant, held);
+    assert.equal(await queue.fail(failing, 'provider_unavailable'), true);
+    assert.deepEqual(await nextAttempt(held), { due: true, dirty: false });
+  } finally {
+    await pool.end();
+    await admin.query(`DROP SCHEMA ${schema} CASCADE`);
+    await admin.end();
+  }
+});
+
+test('claimTeam leases one team now (due or not), refuses a live lease and an unknown team', { skip: !databaseUrl }, async () => {
+  const admin = new Pool({ connectionString: databaseUrl, max: 1 });
+  const schema = `public_sync_claim_team_${randomUUID().replaceAll('-', '')}`;
+  await admin.query(`CREATE SCHEMA ${schema}`);
+  const pool = new Pool({ connectionString: databaseUrl, options: `-c search_path=${schema}`, max: 4 });
+  const tenant = `claim-tenant-${randomUUID().replaceAll('-', '')}`;
+  try {
+    await migratePubgDatabase(pool);
+    await pool.query('INSERT INTO pubg_tenants(tenant_id) VALUES ($1)', [tenant]);
+    await pool.query(`INSERT INTO pubg_teams(tenant_id,team_id,label,pubg_shard) VALUES ($1,'t','T','steam')`, [tenant]);
+    const queue = new PublicSyncQueue(pool, { leaseMs: 60_000 });
+    assert.equal(await queue.leaseState(tenant, 't'), 'free');
+    assert.equal(await queue.leaseState(tenant, 'nope'), 'unknown');
+    assert.equal(await queue.claimTeam(tenant, 'nope'), null);
+    // no job row yet: claimTeam creates it; a team that is not due is still claimed
+    const job = await queue.claimTeam(tenant, 't');
+    assert.ok(job);
+    assert.equal(await queue.leaseState(tenant, 't'), 'leased');
+    assert.equal(await queue.claimTeam(tenant, 't'), null, 'a live lease is not taken over');
+    assert.equal(await queue.complete(job, 3_600_000), true);
+    const later = await queue.claimTeam(tenant, 't');
+    assert.ok(later, 'claimable again although the next slot is an hour away');
+    assert.notEqual(later.leaseToken, job.leaseToken);
+  } finally {
+    await pool.end();
+    await admin.query(`DROP SCHEMA ${schema} CASCADE`);
+    await admin.end();
+  }
+});

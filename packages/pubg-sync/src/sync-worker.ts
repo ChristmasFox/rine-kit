@@ -59,6 +59,9 @@ export interface PublicSyncWorkerOptions {
   /** When set, a finished team is scheduled with this delay instead of `syncIntervalMs`.
    * Lab's hourly prefetch uses the delay until the next minute-5 slot. */
   nextSyncDelayMs?: (now: Date) => number;
+  /** When a finished team still has telemetry waiting for a later run (more candidates than `maxTelemetryFetches`),
+   * schedule it again after this delay instead of at the normal slot, until the backlog is gone. Unset: off. */
+  catchupDelayMs?: number;
   onTeamError?: (code: 'public_sync_team_invalid' | 'public_sync_team_failed') => void;
 }
 
@@ -202,8 +205,10 @@ function numberFrom(value: unknown): number {
   return Number.isFinite(result) && result >= 0 ? Math.trunc(result) : 0;
 }
 
-function telemetryRun(value: unknown): { discovered: number; fetched: number; unavailable: number } {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return { discovered: 0, fetched: 0, unavailable: 0 };
+interface TelemetryRunCounts { discovered: number; fetched: number; unavailable: number; deferred: number }
+
+function telemetryRun(value: unknown, maxFetches: number): TelemetryRunCounts {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { discovered: 0, fetched: 0, unavailable: 0, deferred: 0 };
   const data = value as Record<string, unknown>;
   const run = data.run && typeof data.run === 'object' && !Array.isArray(data.run)
     ? data.run as Record<string, unknown>
@@ -212,7 +217,24 @@ function telemetryRun(value: unknown): { discovered: number; fetched: number; un
     discovered: numberFrom(run.discoveredMatchCount),
     fetched: numberFrom(run.fetchedCount),
     unavailable: numberFrom(run.unavailableCount),
+    // Candidates beyond this run's fetch budget were marked PENDING and wait for the next run.
+    deferred: Math.max(0, numberFrom(run.candidateMatchCount) - maxFetches),
   };
+}
+
+export type SyncTeamResult =
+  | { status: 'synced'; telemetry: { discovered: number; fetched: number; unavailable: number; deferred: number } }
+  /** Another process was already syncing the team; it had finished when this returned. */
+  | { status: 'joined' }
+  /** Another process still held the team when the wait ran out. */
+  | { status: 'busy' }
+  | { status: 'failed'; invalid: boolean }
+  | { status: 'unknown_team' };
+
+export interface SyncTeamOptions {
+  signal?: AbortSignal;
+  /** How long to wait for a worker that is already syncing the team. Default 0 (do not wait). */
+  waitMs?: number;
 }
 
 /** Independent public-SaaS ingestion process. It loads only registered SaaS
@@ -228,6 +250,7 @@ export class PublicSyncWorker {
   private readonly teamConcurrency: number;
   private readonly syncIntervalMs: number;
   private readonly nextSyncDelayMs: ((now: Date) => number) | undefined;
+  private readonly catchupDelayMs: number | undefined;
   private readonly leaseMs: number;
   private readonly queue: PublicSyncQueue;
 
@@ -239,6 +262,9 @@ export class PublicSyncWorker {
     this.teamConcurrency = boundedInteger(options.teamConcurrency ?? DEFAULT_TEAM_CONCURRENCY, DEFAULT_TEAM_CONCURRENCY, 1, 16);
     this.syncIntervalMs = boundedInteger(options.syncIntervalMs ?? DEFAULT_SYNC_INTERVAL_MS, DEFAULT_SYNC_INTERVAL_MS, 1_000, 24 * 60 * 60_000);
     this.nextSyncDelayMs = options.nextSyncDelayMs;
+    this.catchupDelayMs = options.catchupDelayMs === undefined
+      ? undefined
+      : boundedInteger(options.catchupDelayMs, 1_000, 1_000, 24 * 60 * 60_000);
     this.leaseMs = boundedInteger(options.leaseMs ?? 120_000, 120_000, 1_000, 15 * 60_000);
     this.queue = new PublicSyncQueue(pool, { leaseMs: this.leaseMs });
     this.now = options.now ?? (() => new Date());
@@ -297,11 +323,38 @@ export class PublicSyncWorker {
     return this.queue.getSnapshot();
   }
 
-  private async processJob(job: PublicSyncJob): Promise<
-    | { ok: true; telemetry: { discovered: number; fetched: number; unavailable: number } }
+  /** Syncs one team now, due or not, through the same job (lease, heartbeat, schedule) the hourly run uses, so it
+   * never works in parallel with a worker on the same team. Where a live lease already holds the team it waits
+   * (up to `waitMs`) for that run to finish instead of starting a second one. */
+  async syncTeam(tenantId: string, teamId: string, options: SyncTeamOptions = {}): Promise<SyncTeamResult> {
+    const deadline = Date.now() + Math.max(0, options.waitMs ?? 0);
+    for (;;) {
+      if (options.signal?.aborted) return { status: 'failed', invalid: false };
+      const job = await this.queue.claimTeam(tenantId, teamId);
+      if (job) {
+        const result = await this.processJob(job, options.signal);
+        if (result.ok) return { status: 'synced', telemetry: result.telemetry };
+        this.onTeamError(result.invalid ? 'public_sync_team_invalid' : 'public_sync_team_failed');
+        return { status: 'failed', invalid: result.invalid };
+      }
+      const state = await this.queue.leaseState(tenantId, teamId);
+      if (state === 'unknown') return { status: 'unknown_team' };
+      if (state === 'free') continue; // released between the claim and this read
+      if (Date.now() >= deadline) return { status: 'busy' };
+      while (Date.now() < deadline && !options.signal?.aborted && await this.queue.leaseState(tenantId, teamId) === 'leased') {
+        await new Promise<void>((resolve) => setTimeout(resolve, 500));
+      }
+      if (Date.now() >= deadline && await this.queue.leaseState(tenantId, teamId) === 'leased') return { status: 'busy' };
+      return { status: 'joined' };
+    }
+  }
+
+  private async processJob(job: PublicSyncJob, outer?: AbortSignal): Promise<
+    | { ok: true; telemetry: TelemetryRunCounts }
     | { ok: false; invalid: boolean }
   > {
     const stopIfLeaseLost = new AbortController();
+    const stop = outer ? AbortSignal.any([stopIfLeaseLost.signal, outer]) : stopIfLeaseLost.signal;
     let renewalInFlight = false;
     const heartbeat = setInterval(() => {
       if (renewalInFlight) return;
@@ -332,13 +385,17 @@ export class PublicSyncWorker {
         maxFetches: this.maxTelemetryFetches,
         concurrency: this.telemetryConcurrency,
         trigger: 'hourly',
-        signal: stopIfLeaseLost.signal,
+        signal: stop,
       });
-      const delayMs = this.nextSyncDelayMs ? this.nextSyncDelayMs(this.now()) : this.syncIntervalMs;
-      if (stopIfLeaseLost.signal.aborted || !await this.queue.complete(job, delayMs)) {
+      const telemetry = telemetryRun(result.data, this.maxTelemetryFetches);
+      const regularDelayMs = this.nextSyncDelayMs ? this.nextSyncDelayMs(this.now()) : this.syncIntervalMs;
+      const delayMs = this.catchupDelayMs !== undefined && telemetry.deferred > 0
+        ? Math.min(this.catchupDelayMs, regularDelayMs)
+        : regularDelayMs;
+      if (stop.aborted || !await this.queue.complete(job, delayMs)) {
         return { ok: false, invalid: false };
       }
-      return { ok: true, telemetry: telemetryRun(result.data) };
+      return { ok: true, telemetry };
     } catch (error) {
       const invalid = error instanceof InvalidTeamError;
       await this.queue.fail(job, invalid ? 'public_sync_team_invalid' : 'public_sync_team_failed').catch(() => false);
@@ -348,4 +405,19 @@ export class PublicSyncWorker {
     }
   }
 
+}
+
+export interface SyncTeamNowOptions extends PublicSyncWorkerOptions, SyncTeamOptions {
+  tenantId: string;
+  teamId: string;
+}
+
+/** Syncs one team right now (a host calls it when a question arrives for a team whose data is behind). Same job,
+ * lease and schedule as the worker; see `PublicSyncWorker.syncTeam`. */
+export async function syncTeamNow(pool: Pool, options: SyncTeamNowOptions): Promise<SyncTeamResult> {
+  const { tenantId, teamId, signal, waitMs, ...workerOptions } = options;
+  return new PublicSyncWorker(pool, workerOptions).syncTeam(tenantId, teamId, {
+    ...(signal ? { signal } : {}),
+    ...(waitMs !== undefined ? { waitMs } : {}),
+  });
 }
