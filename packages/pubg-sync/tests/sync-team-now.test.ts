@@ -128,3 +128,68 @@ test('syncTeamNow does not run beside a worker: it waits for the lease holder, o
     await close();
   }
 });
+
+test('a member who joins later gets their earlier games in matches that were already stored, once (the real worker path)', { skip }, async () => {
+  const { pool, close } = await scratch();
+  const suffix = randomUUID().replaceAll('-', '');
+  const [a1, a2] = [`account.a1_${suffix}`, `account.a2_${suffix}`];
+  const matchIds = [`m1-${suffix}`, `m2-${suffix}`];
+  const tenantId = `t-${suffix}`;
+  const teamId = `room-${suffix}`;
+  const detailRequests: string[] = [];
+  const pubg: typeof fetch = async (input) => {
+    const url = new URL(String(input));
+    if (url.origin !== 'https://api.pubg.com') return Response.json({ events: [] });
+    if (url.pathname.endsWith('/players')) {
+      const ids = (url.searchParams.get('filter[playerIds]') ?? '').split(',').filter(Boolean);
+      return Response.json({
+        data: ids.map((id) => ({
+          type: 'player', id, attributes: { name: id },
+          relationships: { matches: { data: matchIds.map((m) => ({ type: 'match', id: m })) } },
+        })),
+      });
+    }
+    const matchId = url.pathname.split('/').at(-1) ?? '';
+    detailRequests.push(matchId);
+    const stat = (playerId: string, kills: number) => ({
+      type: 'participant', id: `p-${playerId}`,
+      attributes: { stats: { playerId, kills, assists: 0, damageDealt: kills * 100, DBNOs: 0, revives: 0, headshotKills: 0, timeSurvived: 900, longestKill: 0, winPlace: 3 } },
+    });
+    return Response.json({
+      data: {
+        type: 'match', id: matchId,
+        attributes: { createdAt: '2026-10-12T10:00:00.000Z', matchType: 'competitive', gameMode: 'squad-fpp', mapName: 'Baltic_Main', duration: 1200, patchVersion: 'fixture' },
+        relationships: { assets: { data: [] } },
+      },
+      included: [stat(a1, 1), stat(a2, 3)],
+    });
+  };
+  const sync = () => syncTeamNow(pool, {
+    tenantId, teamId, apiKey: 'fixture-only', admission, fetchImpl: pubg, maxTelemetryFetches: 2, nextSyncDelayMs: () => 3_600_000,
+  });
+  const rowsOf = async (account: string) =>
+    (await pool.query('SELECT count(*)::int AS n FROM pubg_match_players WHERE account_id=$1', [account])).rows[0]!.n as number;
+  try {
+    // Alice alone
+    await createTeam(pool, { tenantId, teamId, label: 'Room', shard: 'steam', members: [{ accountId: a1, displayName: 'Alice' }] });
+    assert.equal((await sync()).status, 'synced');
+    assert.deepEqual([await rowsOf(a1), await rowsOf(a2)], [2, 0]);
+    assert.ok(matchIds.every((id) => detailRequests.includes(id)), 'both matches were fetched (and their Telemetry resolved)');
+
+    // Bob joins; the job is made due like a link does
+    await pool.query("INSERT INTO pubg_team_members(tenant_id,team_id,pubg_account_id,added_by) VALUES ($1,$2,$3,'fixture')", [tenantId, teamId, a2]);
+    await pool.query("INSERT INTO pubg_account_names(shard,account_id,display_name) VALUES ('steam',$1,'Bob') ON CONFLICT DO NOTHING", [a2]);
+    detailRequests.length = 0;
+    assert.equal((await sync()).status, 'synced');
+    assert.deepEqual([await rowsOf(a1), await rowsOf(a2)], [2, 2], "Bob's rows are added next to Alice's");
+    assert.deepEqual([...detailRequests].sort(), [...matchIds].sort(), 'the stored matches were fetched again for him');
+
+    // once only
+    detailRequests.length = 0;
+    assert.equal((await sync()).status, 'synced');
+    assert.deepEqual(detailRequests, []);
+    assert.deepEqual([await rowsOf(a1), await rowsOf(a2)], [2, 2]);
+  } finally {
+    await close();
+  }
+});

@@ -582,6 +582,126 @@ test('PUBG API sync refreshes the match list but fetches only matches missing fr
   assert.equal(requestedPaths.filter((path) => path.endsWith('/matches/m2')).length, 1);
 });
 
+test('a stored match that lacks a roster player\'s own row is fetched again for that player; a complete one is not', async () => {
+  const fetched: string[] = [];
+  const client = new PubgApiClient({
+    apiKey: 'test-api-key',
+    baseUrl: 'https://api.example.test',
+    maxRetries: 0,
+    fetchImpl: async (input) => {
+      const url = String(input);
+      if (url.includes('/players?')) return jsonResponse(playerDiscovery(['m1', 'm2', 'm3']));
+      const matchId = url.split('/matches/')[1] ?? '';
+      fetched.push(matchId);
+      return jsonResponse(matchPayload(matchId, '2026-09-18T12:00:00.000Z'));
+    },
+  });
+  const now = new Date('2026-09-19T00:00:00.000Z');
+  const known = new Set(['m1', 'm2']);
+
+  // m1 has both rows, m2 only p1's (p2 joined the roster after it was stored), m3 was never stored.
+  const completing = await client.syncTeam(TEAM, {
+    knownMatchIds: known,
+    knownMatchPlayers: new Map([
+      ['m1', new Set(['p1', 'p2'])],
+      ['m2', new Set(['p1'])],
+    ]),
+    now,
+  });
+  assert.deepEqual([...fetched].sort(), ['m2', 'm3']);
+  assert.deepEqual(completing.diagnostics?.completedMatchIds, ['m2']);
+  assert.equal(completing.diagnostics?.newMatchCount, 1, 'only m3 is new; m2 is completed, not new');
+  assert.equal(completing.diagnostics?.cachedMatchCount, 1);
+  // the fresh details carry both players' rows
+  assert.deepEqual(
+    completing.records.find((record) => record.matchId === 'm2')?.players.map((player) => player.accountId).sort(),
+    ['p1', 'p2'],
+  );
+
+  // nothing lacks anyone: nothing is fetched except what is new
+  fetched.length = 0;
+  const settled = await client.syncTeam(TEAM, {
+    knownMatchIds: new Set(['m1', 'm2', 'm3']),
+    knownMatchPlayers: new Map(['m1', 'm2', 'm3'].map((id) => [id, new Set(['p1', 'p2'])])),
+    now,
+  });
+  assert.deepEqual(fetched, []);
+  assert.deepEqual(settled.diagnostics?.completedMatchIds, []);
+
+  // callers that do not say who has rows keep the old rule: known means skipped
+  const legacy = await client.syncTeam(TEAM, { knownMatchIds: new Set(['m1', 'm2', 'm3']), now });
+  assert.deepEqual(fetched, []);
+  assert.equal(legacy.records.length, 0);
+});
+
+test('a member added to a team gets their earlier games in matches that were already stored, once', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'pubg-domain-new-member-'));
+  const requested: string[] = [];
+  const onlyAlice: TeamConfig = { ...TEAM, players: [TEAM.players[0]!] };
+  try {
+    const client = new PubgApiClient({
+      apiKey: 'test-api-key',
+      baseUrl: 'https://api.example.test',
+      maxRetries: 0,
+      fetchImpl: async (input) => {
+        const url = new URL(String(input));
+        if (url.pathname.endsWith('/players')) {
+          const ids = (url.searchParams.get('filter[playerIds]') ?? '').split(',');
+          return jsonResponse({
+            data: playerDiscovery(['m1', 'm2']).data
+              ? (playerDiscovery(['m1', 'm2']).data as Array<{ id: string }>).filter((entry) => ids.includes(entry.id))
+              : [],
+          });
+        }
+        const matchId = url.pathname.split('/matches/')[1] ?? '';
+        requested.push(matchId);
+        return jsonResponse(matchPayload(matchId, matchId === 'm1' ? '2026-09-18T11:00:00.000Z' : '2026-09-18T12:00:00.000Z'));
+      },
+    });
+    const repository = new SqlitePubgRepository(join(root, 'pubg.sqlite'));
+    const serviceFor = (team: TeamConfig) => {
+      const context = createTeamContext('test-tenant', team);
+      return new PubgDomainService({
+        teamContext: context,
+        repository: new SqlitePubgRepositoryAdapter(repository, context),
+        apiClient: client,
+        now: () => new Date('2026-09-19T00:00:00.000Z'),
+      });
+    };
+    const kills = async (service: PubgDomainService) => {
+      const result = await service.queryStats({
+        sessionId: 'session-new-member',
+        selector: { type: 'time_range', from: '2026-09-18T00:00:00.000Z', to: '2026-09-19T00:00:00.000Z' },
+        metrics: ['matches', 'kills'],
+        groupBy: 'player',
+        team: true,
+        refresh: true,
+      } as never);
+      const rows = (result.data as { rows: Array<{ key: string; metrics: { matches: number; kills: number } }> }).rows;
+      return Object.fromEntries(
+        rows.map((row) => [row.key, { matches: row.metrics.matches, kills: row.metrics.kills }]),
+      );
+    };
+
+    // Alice alone: her two matches are stored with her row only.
+    assert.deepEqual(await kills(serviceFor(onlyAlice)), { p1: { matches: 2, kills: 2 } });
+    assert.deepEqual(requested.sort(), ['m1', 'm2']);
+
+    // Bob joins: the same two matches are fetched once more and Bob's rows are added next to Alice's.
+    requested.length = 0;
+    const withBob = await kills(serviceFor(TEAM));
+    assert.deepEqual(requested.sort(), ['m1', 'm2']);
+    assert.deepEqual(withBob, { p1: { matches: 2, kills: 2 }, p2: { matches: 2, kills: 4 } });
+
+    // and once only: the next sync fetches nothing
+    requested.length = 0;
+    assert.deepEqual(await kills(serviceFor(TEAM)), withBob);
+    assert.deepEqual(requested, []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('PUBG API sync fairly rotates player match lists before applying a small match ceiling', async () => {
   const requestedMatchIds: string[] = [];
   const client = new PubgApiClient({

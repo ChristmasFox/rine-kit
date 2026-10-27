@@ -770,8 +770,17 @@ export class PubgDomainService {
       knownMatchIds: existing
         .map((record) => record.matchId)
         .filter((matchId) => knownIds.has(matchId)),
+      // A match stored before a player joined the roster has no row for that player: it is fetched again for them.
+      knownMatchPlayers: new Map(
+        existing.map((record) => [record.matchId, new Set(record.players.map((p) => p.accountId))]),
+      ),
       ...(signal ? { signal } : {}),
     });
+    const completedMatchIds = new Set(
+      Array.isArray(synced.diagnostics?.completedMatchIds)
+        ? synced.diagnostics.completedMatchIds.map(String)
+        : [],
+    );
     if (synced.records.length) {
       await this.repository.upsertMatches(synced.records, {
         source: 'pubg-api',
@@ -804,7 +813,10 @@ export class PubgDomainService {
       coverage: stateValue.coverage,
       source: stateValue.source,
       diagnostics: synced.diagnostics ?? {},
-      newMatchIds: synced.records.map((record) => record.matchId),
+      // Matches fetched again only to add a member's row are not new: they get no new Telemetry run.
+      newMatchIds: synced.records
+        .map((record) => record.matchId)
+        .filter((matchId) => !completedMatchIds.has(matchId)),
     };
   }
 

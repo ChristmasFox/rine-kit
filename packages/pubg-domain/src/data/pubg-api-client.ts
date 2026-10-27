@@ -52,6 +52,13 @@ export interface SyncTeamOptions {
   shard?: string;
   maxMatches?: number;
   knownMatchIds?: Iterable<string>;
+  /**
+   * Which of the roster already has its own row in each stored match (match id → account ids). A known match is
+   * skipped only when every roster player the API lists for it has a row; a match stored before a player joined
+   * the roster is fetched again so that player's row is added (otherwise the new member's earlier games stay
+   * missing from every statistic for good). Without it, `knownMatchIds` alone decides.
+   */
+  knownMatchPlayers?: ReadonlyMap<string, ReadonlySet<string>>;
   signal?: AbortSignal;
   now?: Date;
 }
@@ -522,7 +529,28 @@ export class PubgApiClient {
     });
     const discoveredMatchIds = fairMatchSelection(snapshots, maxMatches);
     const knownMatchIds = new Set(options.knownMatchIds ?? []);
-    const matchIdsToFetch = discoveredMatchIds.filter((matchId) => !knownMatchIds.has(matchId));
+    const knownPlayers = options.knownMatchPlayers;
+    // The roster players the API lists for each match, to see whose row a known match still lacks.
+    const listedBy = new Map<string, string[]>();
+    if (knownPlayers) {
+      for (const snapshot of snapshots) {
+        for (const matchId of snapshot.matchIds) {
+          listedBy.set(matchId, [...(listedBy.get(matchId) ?? []), snapshot.configured.id]);
+        }
+      }
+    }
+    const lacksPlayer = (matchId: string): boolean => {
+      if (!knownPlayers) return false;
+      const have = knownPlayers.get(matchId);
+      return (listedBy.get(matchId) ?? []).some((accountId) => !have?.has(accountId));
+    };
+    const completingMatchIds = discoveredMatchIds.filter(
+      (matchId) => knownMatchIds.has(matchId) && lacksPlayer(matchId),
+    );
+    const completing = new Set(completingMatchIds);
+    const matchIdsToFetch = discoveredMatchIds.filter(
+      (matchId) => !knownMatchIds.has(matchId) || completing.has(matchId),
+    );
     const gate = new ConcurrencyGate(this.concurrency);
     const records: NormalizedMatch[] = [];
     const failedMatchIds: string[] = [];
@@ -557,7 +585,8 @@ export class PubgApiClient {
       diagnostics: {
         discoveredMatchCount: discoveredMatchIds.length,
         cachedMatchCount: discoveredMatchIds.length - matchIdsToFetch.length,
-        newMatchCount: matchIdsToFetch.length,
+        newMatchCount: matchIdsToFetch.length - completingMatchIds.length,
+        completedMatchIds: completingMatchIds,
         failedMatchIds: [...new Set(failedMatchIds)],
         snapshots: snapshots.map((snapshot) => ({
           accountId: snapshot.configured.id,
