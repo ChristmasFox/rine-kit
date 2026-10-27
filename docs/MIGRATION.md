@@ -83,3 +83,18 @@ Lab：除第一批事项外：
 1. **npm scope**：`@rine-kit` 是否可用 / 注册；若换 scope，全局替换即可。
 2. **GitHub 远端**：`ChristmasFox/rine-kit` 尚未推送本分支；未发布任何包，因此「RINE/Lab 已切换到 registry 版本」**尚未发生**，只证明了切换可行。
 3. RINE / Lab 的正式切换（删除重复实现）需发布 `0.1.0` 之后进行，避免主干依赖一个不存在的包。
+
+## 第三批（0.1.3）：Lab 的 PUBG 回复胶水
+
+状态（2026-10-27）：`@rine-kit/pubg-reply` 新增；其余包升到 0.1.3。
+
+| 包 | 来源 | 说明 |
+|----|------|------|
+| `@rine-kit/pubg-reply` | Lab `plugins/pubg/src/{index.ts 中的 jsonToolResult 及辅助函数, reply-guides.ts, evidence-guard.ts, query-share.ts}`、`plugins/amadeus/src/group-roster.ts`、`plugins/pubg/skills/pubg/SKILL.md` | 工具结果怎么交给模型与聊天：presentation / 聊天版 displayText / replyGuide / 🔗；Kurisu 示例与群语气锚点、称呼名册；PUBG 规则全文；裸战绩=全队护栏与外发证据检查。**原样移入**，只去掉 OpenClaw 的 `jsonResult` 包装，回复指南的示例可替换，类型处加了严格模式需要的 `??` |
+
+证明：`packages/pubg-reply/tests/golden` 由 Lab 自己的 `jsonToolResult` 生成（`scripts/gen-golden-from-lab.ts`，只读 Lab），包内测试与之逐字节相同；`pubg-tools/scripts/compare-lab-schemas.ts` 证明八个工具的输入形状与描述和 Lab 一致。
+
+其他：`pubg-plugin` 新增 `reply` / `rules` 选项（默认行为不变）；`agent-core` 新增 `replyStream`、`ToolRecord`、`noTools`；`pubg-postgres` 新增 `pubg_review_shares` 与 `PostgresReviewShareStore`；`pubg-postgres` 新增 SQLite↔PostgreSQL 工具级等价测试。
+
+Lab 切换（另行处理，本轮未改 Lab）：`plugins/pubg` 的 `jsonToolResult` / `reply-guides` / `evidence-guard` / `query-share` / `amadeus` 的 `group-roster` 改为依赖 `@rine-kit/pubg-reply`，删除自己的副本；黄金测试已证明行为不变。
+
