@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-domain",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "description": "PUBG domain: query schema, time selectors, team context, SQLite/Postgres-neutral repository port, review and share logic. Host-independent; extracted from Lab.",
   "license": "MIT",

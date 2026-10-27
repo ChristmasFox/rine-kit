@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url';
 import { Pool } from 'pg';
+import { migratePubgDatabase } from '@rine-kit/pubg-postgres';
 import { assertArchiveOutsideRepository } from '@rine-kit/pubg-intelligence/backfill';
 import { RawTelemetryArchive } from '@rine-kit/pubg-intelligence/archive';
 import {
@@ -90,10 +91,11 @@ export async function publicSyncWorkerMain(args: string[], env: NodeJS.ProcessEn
   process.once('SIGINT', onStop);
   process.once('SIGTERM', onStop);
   try {
-    const ready = await pool.query("SELECT 1 FROM pubg_schema_migrations WHERE migration_id='0001_pubg_schema.sql'");
-    const current = await pool.query("SELECT 1 FROM pubg_schema_migrations WHERE migration_id='0004_sync_job_dirty.sql'");
-    if (!ready.rowCount || !current.rowCount) throw new Error('pubg_saas_schema_upgrade_required');
-    healthServer = await startWorkerHealthServer();
+    // The worker brings the schema it needs up to date itself (idempotent, serialised by an advisory lock), so it
+    // never depends on another process (the host API) having migrated first, and a deploy that starts both at
+    // once does not leave it crash-looping until the API is done.
+    await migratePubgDatabase(pool);
+    healthServer = await startWorkerHealthServer(positiveInteger(env.PUBLIC_SYNC_HEALTH_PORT, 8081, 65_535));
     const metricsPort = positiveInteger(env.PUBG_SAAS_WORKER_METRICS_PORT, 9464, 65_535);
     metricsServer = await startWorkerMetricsServer(() => {
       const memory = process.memoryUsage();

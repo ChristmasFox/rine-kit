@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/agent-memory-ai-sdk",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "description": "Vercel AI SDK adapter for @rine-kit/agent-memory: an OpenAI-compatible embedding provider (bounded, normalised, budget-aware) and the Light/REM learning planner. Extracted from Gate.",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-postgres",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "type": "module",
   "description": "PostgreSQL storage for PUBG team data (matches, telemetry features, sync queue, query sessions) behind @rine-kit/pubg-domain's PubgRepositoryPort. Extracted from Gate; tenancy is a host-supplied scope, no KOOK dependency.",
   "license": "MIT",
