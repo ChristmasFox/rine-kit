@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-sync",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "description": "PUBG provider sync for @rine-kit/pubg-postgres: team sync worker, player-name resolver, shared API admission (rate limit), egress proxy config, worker metrics. Extracted from Gate; no KOOK dependency.",
   "license": "MIT",

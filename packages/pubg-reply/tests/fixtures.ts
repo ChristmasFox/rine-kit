@@ -1,5 +1,3 @@
-import type { ToolEnvelope } from '@rine-kit/pubg-domain';
-
 /*
  * Domain envelopes shaped like what PubgDomainService returns, used to prove that the reply glue gives byte-identical
  * output to Lab's (see tests/golden and scripts/gen-golden-from-lab.ts).
@@ -34,7 +32,8 @@ const hit = (actor: typeof A, victim: typeof A, hitCount: number, damage: number
 
 export interface Fixture {
   tool: string;
-  envelope: ToolEnvelope;
+  /** Shaped like a Domain ToolEnvelope. */
+  envelope: object;
 }
 
 export const FIXTURES: Record<string, Fixture> = {

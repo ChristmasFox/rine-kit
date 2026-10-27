@@ -107,3 +107,27 @@ export function droppedReplyFacts(messages: unknown, finalText: string): string[
   }
   return [];
 }
+
+/** One tool call of a turn and what it returned (agent-core's ToolRecord has this shape). */
+export interface TurnToolCall {
+  name: string;
+  input: unknown;
+  output: unknown;
+}
+
+/**
+ * Lab's outbound checks, for a host that has the turn's tool calls instead of an OpenClaw transcript: the same
+ * assessPubgEvidence / droppedReplyFacts run over the turn rewritten as that transcript.
+ */
+export function assessTurn(turn: { request: string; calls: readonly TurnToolCall[]; finalText: string }): {
+  verdict: EvidenceVerdict;
+  dropped: string[];
+} {
+  const messages: Message[] = [{ role: 'user', content: turn.request }];
+  for (const call of turn.calls) {
+    messages.push({ role: 'assistant', content: [{ type: 'toolCall', name: call.name, arguments: call.input }] });
+    messages.push({ role: 'toolResult', toolName: call.name, content: JSON.stringify(call.output) });
+  }
+  const verdict = assessPubgEvidence(messages, turn.finalText);
+  return { verdict, dropped: verdict === 'verified' ? droppedReplyFacts(messages, turn.finalText) : [] };
+}

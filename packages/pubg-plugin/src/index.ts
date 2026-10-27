@@ -20,8 +20,10 @@ export interface PubgAccess {
   sessionId: string;
   /** IANA zone the answers are written in ("today" and clock times). Default Asia/Shanghai, as in Lab. */
   timezone?: string;
-  /** Appends a share link to a query answer; absent = no link (the answer then has no 🔗 line). */
-  share?: ShareAppender;
+  /** The share step for one tool's answer; absent, or returning undefined = no link (the answer then has no 🔗 line). */
+  share?(toolName: string): ShareAppender | undefined;
+  /** Runs after a result was built, e.g. to store the share that was just issued before the link is shown. */
+  afterReply?(): Promise<void>;
 }
 
 export interface PubgPluginOptions<Ctx> {
@@ -75,13 +77,15 @@ export function createPubgPlugin<Ctx>(options: PubgPluginOptions<Ctx>): Plugin<C
         ...(signal ? { signal } : {}),
       });
       if (!options.reply) return envelope;
-      return jsonToolResult(
+      const reply = jsonToolResult(
         spec.name,
         envelope,
         access.timezone ?? 'Asia/Shanghai',
-        access.share,
+        access.share?.(spec.name),
         options.reply.guide,
       );
+      await access.afterReply?.();
+      return reply;
     },
   }));
   return definePlugin<Ctx>({

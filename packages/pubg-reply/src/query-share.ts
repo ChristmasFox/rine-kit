@@ -125,3 +125,34 @@ export function appendQueryShareLink(input: {
     return plain;
   }
 }
+
+/**
+ * The share-link step of a tool result for one squad (Lab's `queryShareFor`, with the store and the squad given by
+ * the host instead of read from OpenClaw config): appends the 🔗 line to the query answers that have matches, and
+ * does nothing when the host has no share base URL.
+ */
+export function queryShareFor(
+  toolName: string,
+  options: { shareBaseUrl?: string | undefined; squadId: string; store: () => ReviewShareStore; now?: () => Date },
+): ((envelope: { status: string; asOf?: string; evidenceRefs?: unknown }, displayText: string, timezone: string, presentation: { type: string }) => { text: string; url?: string }) | undefined {
+  const shareBaseUrl = options.shareBaseUrl;
+  if (!shareBaseUrl) return undefined;
+  return (envelope, displayText, timezone, presentation) => {
+    const players = querySharePlayers(presentation);
+    const teamTotals = queryShareTeamTotals(displayText);
+    return appendQueryShareLink({
+      toolName,
+      status: envelope.status,
+      matchIds: (envelope.evidenceRefs as { matchIds?: unknown } | undefined)?.matchIds,
+      displayText,
+      dataUpdatedAt: envelope.asOf ?? null,
+      timezone,
+      squadId: options.squadId,
+      shareBaseUrl,
+      store: options.store,
+      now: (options.now ?? (() => new Date()))(),
+      ...(players.length ? { players } : {}),
+      ...(teamTotals ? { teamTotals } : {}),
+    });
+  };
+}
