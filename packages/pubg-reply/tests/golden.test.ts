@@ -98,3 +98,27 @@ test('the roster heading is Lab’s exact wording by default and takes the host�
   assert.ok(!room.includes('Arthur'));
   assert.equal(room.split('\n').slice(1).join('\n'), lab.split('\n').slice(1).join('\n'));
 });
+
+test('the worked examples take the squad from the host; Lab’s squad is the default and changes nothing', async () => {
+  const { kurisuReplyExamples, KURISU_REPLY_EXAMPLES, LAB_EXAMPLE_SQUAD } = await import('../src/index.js');
+  assert.deepEqual(kurisuReplyExamples(), KURISU_REPLY_EXAMPLES);
+  assert.deepEqual(kurisuReplyExamples(LAB_EXAMPLE_SQUAD), KURISU_REPLY_EXAMPLES);
+  const squad = {
+    a: { name: '小A', account: 'PlayerA' },
+    b: { name: '小B', account: 'PlayerB' },
+    c: { name: '小C', account: 'PlayerC' },
+    d: { name: '小D' },
+  };
+  const room = kurisuReplyExamples(squad);
+  for (const text of [room.stats!, room.teamDamage!]) {
+    for (const lab of ['Arthur', 'Nori', '变态猴', 'kim_kkl', 'SG_Labmem', '打工战士']) assert.ok(!text.includes(lab), lab);
+    assert.ok(!text.includes('{{'));
+  }
+  assert.match(room.stats!, /🥇 \*\*效率杀手：小A（PlayerA）\*\*/u);
+  assert.match(room.teamDamage!, /狂气压制：小C（PlayerC） ➡️ 小B（PlayerB）/u);
+  // Everything but the names is the same text: mapping the names back gives Lab's examples.
+  const back = (text: string) =>
+    text.replaceAll('小A（PlayerA）', 'Nori（kim_kkl）').replaceAll('小B（PlayerB）', '变态猴（SG_LabmemNo004）').replaceAll('小C（PlayerC）', 'Arthur（SG_LabmemNo007）').replaceAll('小B', '变态猴').replaceAll('小C', 'Arthur').replaceAll('小D', '打工战士');
+  assert.equal(back(room.stats!), KURISU_REPLY_EXAMPLES.stats);
+  assert.equal(back(room.teamDamage!), KURISU_REPLY_EXAMPLES.teamDamage);
+});
