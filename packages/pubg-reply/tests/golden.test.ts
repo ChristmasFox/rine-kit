@@ -76,3 +76,25 @@ test('assessTurn: facts without a tool result are refused, a verified card is ac
   assert.ok(short.dropped.length > 0, 'a one-line summary drops card facts');
   assert.deepEqual(assessTurn({ request: '昨日战绩', calls: [call], finalText: card }).dropped, []);
 });
+
+test('the roster heading is Lab’s exact wording by default and takes the host’s own authority', async () => {
+  const { renderGroupRoster, LAB_ROSTER_AUTHORITY } = await import('../src/index.js');
+  const entries = [
+    { personId: 'p1', displayName: 'Mei', addressAs: '变态猴', avoid: ['猴子'], note: '爱吐槽', externalAccounts: [{ provider: 'pubg', externalId: 'SG_LabmemNo004' }] },
+  ];
+  const lab = renderGroupRoster(entries)!;
+  // Lab's output, character for character (plugins/amadeus/src/group-roster.ts).
+  assert.equal(
+    lab,
+    [
+      '本群成员的称呼（成员约定、Arthur 审核过的长期设定；与聊天记录里的旧叫法冲突时以这里为准）：',
+      '- Mei（PUBG SG_LabmemNo004）：称呼「变态猴」；不要叫：猴子；爱吐槽',
+      '称呼成员时用这里的叫法。查询战绩、确认身份仍按身份与 PUBG 工具，不要从称呼推断账号。',
+    ].join('\n'),
+  );
+  assert.equal(LAB_ROSTER_AUTHORITY, 'Arthur 审核过的长期设定');
+  const room = renderGroupRoster(entries, { authority: '由该房间管理员审核决定' })!;
+  assert.ok(room.startsWith('本群成员的称呼（成员约定、由该房间管理员审核决定；'));
+  assert.ok(!room.includes('Arthur'));
+  assert.equal(room.split('\n').slice(1).join('\n'), lab.split('\n').slice(1).join('\n'));
+});

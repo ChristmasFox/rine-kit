@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/agent-memory",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "Host-agnostic agent memory runtime: recall (exact/lexical/semantic fusion), explicit writes, evidence-based dreaming. Authorization stays opaque; hosts supply storage, model, embedding and clock ports.",
   "license": "MIT",

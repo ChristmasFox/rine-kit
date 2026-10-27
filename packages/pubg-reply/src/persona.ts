@@ -13,7 +13,16 @@ export interface AddressingRecord {
   externalAccounts: Array<{ provider: string; externalId: string }>;
 }
 
-export function renderGroupRoster(entries: readonly AddressingRecord[]): string | undefined {
+/**
+ * Who decided the forms of address, as the roster's heading says it. Lab's own wording is the default (its roster is
+ * reviewed by Arthur); a host with another authority passes its own, e.g. RINE: the room's admins decide.
+ */
+export const LAB_ROSTER_AUTHORITY = 'Arthur 审核过的长期设定';
+
+export function renderGroupRoster(
+  entries: readonly AddressingRecord[],
+  options: { authority?: string } = {},
+): string | undefined {
   if (!entries.length) return undefined;
   const lines = entries.map((entry) => {
     const accounts = entry.externalAccounts.filter((account) => account.provider === 'pubg').map((account) => account.externalId);
@@ -23,7 +32,7 @@ export function renderGroupRoster(entries: readonly AddressingRecord[]): string 
     return `- ${who}：称呼「${entry.addressAs}」${entry.avoid.length ? `；不要叫：${entry.avoid.join('、')}` : ''}${entry.note ? `；${entry.note}` : ''}`;
   });
   return [
-    '本群成员的称呼（成员约定、Arthur 审核过的长期设定；与聊天记录里的旧叫法冲突时以这里为准）：',
+    `本群成员的称呼（成员约定、${options.authority ?? LAB_ROSTER_AUTHORITY}；与聊天记录里的旧叫法冲突时以这里为准）：`,
     ...lines,
     '称呼成员时用这里的叫法。查询战绩、确认身份仍按身份与 PUBG 工具，不要从称呼推断账号。',
   ].join('\n');

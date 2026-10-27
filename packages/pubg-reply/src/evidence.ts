@@ -10,7 +10,7 @@ export const FACT_TOOLS = new Set([
   'pubg_get_review_facts', 'pubg_get_period_review', 'pubg_query_team_damage',
 ]);
 const REQUEST = /PUBG|绝地求生|吃鸡|战绩|对局|几局|击杀|KD|K\/D/u;
-const FACT = /PUBG|绝地求生|吃鸡|战绩|对局|击杀|伤害|KD|K\/D|no_matches|\d+\s*(?:局|杀|场|次)|一局都没有|没有.{0,8}战绩/u;
+export const FACT = /PUBG|绝地求生|吃鸡|战绩|对局|击杀|伤害|KD|K\/D|no_matches|\d+\s*(?:局|杀|场|次)|一局都没有|没有.{0,8}战绩/u;
 const TEAM = /全队|整队|队伍|小队|我们|咱们|大家|所有人|全员|team|squad/iu;
 // A bare record request names no one ("昨日战绩", "@Kurisu 今天战绩"); in the squad it means the whole team.
 const BARE_RECORD = /^(?:\s|@\S+\s*)*(?:今天|今日|昨天|昨日|前天|本周|这周|上周|最近)?\s*(?:的)?\s*(?:PUBG|吃鸡)?\s*(?:战绩|战况)\s*[?？!！。.~]*\s*$/iu;

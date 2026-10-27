@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-intelligence",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "type": "module",
   "description": "PUBG telemetry analytics: battle, combat, rhythm, tactics, style, highlights, match story, raw-telemetry archive. Host-independent; extracted from Lab.",
   "license": "MIT",
