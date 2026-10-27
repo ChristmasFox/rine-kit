@@ -46,7 +46,7 @@ describe('the chat model over HTTP', () => {
         }),
       );
     });
-    expect(await service(baseUrl, { apiKey: 'sk-test-key' }).reply(input())).toEqual({
+    expect(await service(baseUrl, { apiKey: 'sk-test-key' }).reply(input())).toMatchObject({
       text: 'pong',
     });
     expect(seen.auth).toBe('Bearer sk-test-key');
@@ -96,7 +96,7 @@ describe('the chat model over HTTP', () => {
       if (++calls === 1) return void res.writeHead(502).end('bad gateway');
       res.writeHead(200).end(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }));
     });
-    expect(await service(baseUrl).reply(input())).toEqual({ text: 'ok' });
+    expect(await service(baseUrl).reply(input())).toMatchObject({ text: 'ok' });
     expect(calls).toBe(2);
   });
 

@@ -25,6 +25,21 @@ export interface TurnInput<Ctx> {
    * that has no clear question (or does not want memory) just leaves it out.
    */
   query?: string;
+  /** Answer from what is already in the prompt: no tool is offered (a rewrite pass after a tool result). */
+  noTools?: boolean;
+}
+
+/** One tool call of a turn, with what it returned: for a host that checks the answer against the results. */
+export interface ToolRecord {
+  name: string;
+  input: unknown;
+  output: unknown;
+}
+
+/** An answer and the tool calls made on the way to it. */
+export interface TurnReply {
+  text: string;
+  calls: ToolRecord[];
 }
 
 /** The lines a plugin recalled, as a block of the system prompt that cannot pass for instructions. */
@@ -57,7 +72,12 @@ export interface AgentTurns<Ctx> {
   /** Prompt fragments of the loaded plugins; the host puts them into its system prompt. */
   readonly instructions: string[];
   /** The finished answer of the last round (tool rounds before it are not part of the text). */
-  reply(input: TurnInput<Ctx>): Promise<{ text: string }>;
+  reply(input: TurnInput<Ctx>): Promise<TurnReply>;
+  /**
+   * The same answer, handed over while it is written: `onText` gets the whole text of the round being written so
+   * far (it starts over when a new round begins after a tool call). Resolves with the finished answer.
+   */
+  replyStream(input: TurnInput<Ctx>, onText: (soFar: string) => void): Promise<TurnReply>;
   /** The words of every round as they arrive; tool calls run between the rounds. */
   speech(input: TurnInput<Ctx>): AsyncGenerator<string, void, void>;
 }
@@ -108,7 +128,8 @@ export class AgentTurnService<Ctx> implements AgentTurns<Ctx> {
     ]
       .filter(Boolean)
       .join('\n\n');
-    const tools = this.plugins?.toolCount ? toToolSet(this.plugins, input.ctx) : undefined;
+    const tools =
+      this.plugins?.toolCount && !input.noTools ? toToolSet(this.plugins, input.ctx) : undefined;
     const agent = new ToolLoopAgent({
       model: this.options.model,
       instructions: system || undefined,
@@ -129,7 +150,7 @@ export class AgentTurnService<Ctx> implements AgentTurns<Ctx> {
     return { agent, messages };
   }
 
-  async reply(input: TurnInput<Ctx>): Promise<{ text: string }> {
+  async reply(input: TurnInput<Ctx>): Promise<TurnReply> {
     const { agent, messages } = await this.agent(input);
     try {
       const result = await agent.generate({ messages, abortSignal: input.signal });
@@ -138,8 +159,44 @@ export class AgentTurnService<Ctx> implements AgentTurns<Ctx> {
         throw new LlmError('empty', `the model returned nothing (${result.finishReason})`);
       }
       this.observe(input, text);
-      return { text };
+      return { text, calls: toolRecords(result.steps) };
     } catch (err) {
+      throw toLlmError(err, input.signal);
+    }
+  }
+
+  async replyStream(input: TurnInput<Ctx>, onText: (soFar: string) => void): Promise<TurnReply> {
+    const { agent, messages } = await this.agent(input);
+    let produced = false;
+    let round = '';
+    try {
+      const result = await agent.stream({ messages, abortSignal: input.signal });
+      for await (const part of result.fullStream) {
+        if (part.type === 'start-step') {
+          round = '';
+        } else if (part.type === 'text-delta') {
+          if (!part.text) continue;
+          produced = true;
+          round += part.text;
+          onText(round);
+        } else if (part.type === 'tool-call') {
+          produced = true;
+        } else if (part.type === 'error') {
+          throw part.error;
+        } else if (part.type === 'abort') {
+          throw new LlmError('aborted', 'request was cancelled');
+        }
+      }
+      const text = (await result.text).trim();
+      if (!text) throw new LlmError('empty', 'the model returned nothing');
+      this.observe(input, text);
+      return { text, calls: toolRecords(await result.steps) };
+    } catch (err) {
+      // A provider that just closes the stream after some words has said what it had.
+      if (InvalidResponseDataError.isInstance(err) && produced && !input.signal.aborted && round.trim()) {
+        this.observe(input, round.trim());
+        return { text: round.trim(), calls: [] };
+      }
       throw toLlmError(err, input.signal);
     }
   }
@@ -187,5 +244,25 @@ export class AgentTurnService<Ctx> implements AgentTurns<Ctx> {
     if (input.signal.aborted) throw new LlmError('aborted', 'request was cancelled');
     if (!produced) throw new LlmError('empty', 'the model returned nothing');
     if (said.trim()) this.observe(input, said.trim());
+  }
+}
+
+function toolRecords(
+  steps: ReadonlyArray<{
+    toolResults: ReadonlyArray<{ toolName: string; input: unknown; output: unknown }>;
+  }>,
+): ToolRecord[] {
+  return steps.flatMap((step) =>
+    step.toolResults.map((r) => ({ name: r.toolName, input: r.input, output: parsed(r.output) })),
+  );
+}
+
+/** Tool results reach the model as JSON text (tool-set.ts); a host checking them wants the value. */
+function parsed(output: unknown): unknown {
+  if (typeof output !== 'string') return output;
+  try {
+    return JSON.parse(output);
+  } catch {
+    return output;
   }
 }

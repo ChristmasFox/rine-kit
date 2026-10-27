@@ -78,7 +78,7 @@ describe('AgentTurnService: text', () => {
       );
     });
     const out = await service(baseUrl, reminders(ran, { ok: true, id: 'r1' })).reply(input());
-    expect(out).toEqual({ text: 'Done, 10 minutes from now.' });
+    expect(out).toMatchObject({ text: 'Done, 10 minutes from now.' });
     expect(ran).toEqual([{ input: { text: 'raid', in_minutes: 10 }, ctx }]);
 
     // The model was offered the tool with its schema, and the second round saw the tool's answer.
@@ -481,5 +481,70 @@ describe('observe hook', () => {
     await new Promise((r) => setTimeout(r, 20));
     expect(calls).toBe(1);
     expect(warnings).toEqual(['a memory observe hook failed']);
+  });
+});
+
+describe('replyStream', () => {
+  it('hands over the text as it grows, starts over after a tool round, and reports the tool calls', async () => {
+    const ran: { input: unknown; ctx: unknown }[] = [];
+    let n = 0;
+    const bodies: Body[] = [];
+    const baseUrl = await fakeEndpoint((_req, res, body) => {
+      bodies.push(body);
+      n++;
+      if (n === 1) {
+        return sse(res, [
+          delta('Let me set that. '),
+          {
+            choices: [
+              {
+                delta: {
+                  tool_calls: [
+                    {
+                      index: 0,
+                      id: 'c1',
+                      function: {
+                        name: 'create_reminder',
+                        arguments: '{"text":"raid","in_minutes":10}',
+                      },
+                    },
+                  ],
+                },
+                finish_reason: 'tool_calls',
+              },
+            ],
+          },
+          'data: [DONE]\n\n',
+        ]);
+      }
+      sse(res, [
+        delta('Done, '),
+        delta('in ten minutes.'),
+        { choices: [{ delta: {}, finish_reason: 'stop' }] },
+        'data: [DONE]\n\n',
+      ]);
+    });
+    const seen: string[] = [];
+    const reply = await service(baseUrl, reminders(ran, { ok: true })).replyStream(input(), (t) =>
+      seen.push(t),
+    );
+    expect(reply.text).toBe('Done, in ten minutes.');
+    expect(seen).toEqual(['Let me set that. ', 'Done, ', 'Done, in ten minutes.']);
+    expect(reply.calls).toEqual([
+      { name: 'create_reminder', input: { text: 'raid', in_minutes: 10 }, output: { ok: true } },
+    ]);
+  });
+
+  it('noTools offers the model no tool at all', async () => {
+    const bodies: Body[] = [];
+    const baseUrl = await fakeEndpoint((_req, res, body) => {
+      bodies.push(body);
+      res
+        .writeHead(200)
+        .end(JSON.stringify(completion({ role: 'assistant', content: 'rewritten' })));
+    });
+    const reply = await service(baseUrl, reminders()).reply(input({ noTools: true }));
+    expect(reply.text).toBe('rewritten');
+    expect(bodies[0]!.tools).toBeUndefined();
   });
 });
