@@ -1,0 +1,48 @@
+{
+  "name": "@rine-kit/pubg-share-page",
+  "version": "0.1.9",
+  "type": "module",
+  "description": "The PUBG tactical share page behind a report's link: the page (React, built), the telemetry analysis in worker threads, and a host-independent request handler. The host injects where shares and matches come from; no database, OpenClaw or secrets in here. Extracted from RINE, whose page is the port of Lab's Intelligence Lab share view.",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/server/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/server/index.d.ts",
+        "import": "./dist/server/index.js",
+        "default": "./dist/server/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p src/client/tsconfig.json --noEmit",
+    "test": "tsx --test \"tests/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@rine-kit/pubg-domain": "workspace:*",
+    "@rine-kit/pubg-intelligence": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.2",
+    "vite": "^8.3.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/ChristmasFox/rine-kit.git",
+    "directory": "packages/pubg-share-page"
+  }
+}

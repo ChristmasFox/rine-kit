@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-tools",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "type": "module",
   "description": "The PUBG tool catalogue shared by every host: names, descriptions, validated inputs (zod) and the call into PubgDomainService. Hosts add only identity resolution and result delivery. Extracted from Lab's plugins/pubg.",
   "license": "MIT",

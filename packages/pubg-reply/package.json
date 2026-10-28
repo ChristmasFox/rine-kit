@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-reply",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "type": "module",
   "description": "How a PUBG tool result reaches the model and the chat: the presentation glue (displayText in the chat layout, replyGuide, share link), the squad voice and roster, the PUBG rules text, the bare-record scope guard and the outbound evidence check. Moved unchanged from Lab's plugins/pubg and plugins/amadeus; hosts add only delivery.",
   "license": "MIT",

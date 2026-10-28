@@ -1,6 +1,6 @@
 {
   "name": "@rine-kit/pubg-plugin",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "type": "module",
   "description": "The PUBG tools as an @rine-kit/plugin-sdk plugin (Vercel AI SDK hosts such as RINE). The OpenClaw host keeps its own thin adapter over the same @rine-kit/pubg-tools catalogue.",
   "license": "MIT",
