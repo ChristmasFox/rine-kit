@@ -40,13 +40,20 @@ PUBG tool directly with \`team=true\` and the period selector. Do not call
 \`identity_resolve\` first for it. Never carry a player from earlier chat into
 such a request; the plugin also forces \`team=true\` on a bare record turn.
 
+A bare **战报** (“昨日战报”“昨天战报”“今日战报”, also “日报”) is the same thing: the
+team's record card, not one person's. It also uses \`team=true\` and only
+\`team=true\` — never \`personIds\`, \`playerIds\` or \`playerNames\` next to it (mixing them
+is an \`identity_subject_conflict\` error).
+
 Record requests (“今日战绩”“今天战绩”“昨日战绩”“昨天战绩”“本周战绩”“查询今日战绩”
 and person-specific variants) always use \`pubg_query_stats\` (operation
 \`report\`, \`groupBy: "player"\`) — that result carries the full card
 \`displayText\` with per-member stats, titles and team totals. Never answer a
 record request with \`pubg_search_matches\`: a per-match list
 (“对局列表 共 N 场”) is only for explicit list asks such as “今天打了哪几把”
-“对局列表”, or as the first step of a review.
+“对局列表”, or as the first step of a review. This holds for 战报 as well, and also
+when the stats call failed: correct the call (\`team=true\` alone for a whole-team
+ask) and call \`pubg_query_stats\` again instead of falling back to a per-match list.
 
 Never ask the user for a PUBG ID or say that the account is unconfirmed before
 the identity lookup. Preloaded nickname/account mappings are already confirmed

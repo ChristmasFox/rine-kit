@@ -12,8 +12,8 @@ export const FACT_TOOLS = new Set([
 const REQUEST = /PUBG|绝地求生|吃鸡|战绩|对局|几局|击杀|KD|K\/D/u;
 export const FACT = /PUBG|绝地求生|吃鸡|战绩|对局|击杀|伤害|KD|K\/D|no_matches|\d+\s*(?:局|杀|场|次)|一局都没有|没有.{0,8}战绩/u;
 const TEAM = /全队|整队|队伍|小队|我们|咱们|大家|所有人|全员|team|squad/iu;
-// A bare record request names no one ("昨日战绩", "@Kurisu 今天战绩"); in the squad it means the whole team.
-const BARE_RECORD = /^(?:\s|@\S+\s*)*(?:今天|今日|昨天|昨日|前天|本周|这周|上周|最近)?\s*(?:的)?\s*(?:PUBG|吃鸡)?\s*(?:战绩|战况)\s*[?？!！。.~]*\s*$/iu;
+// A bare record request names no one ("昨日战绩", "昨日战报", "@Kurisu 今天战绩"); in the squad it means the whole team.
+const BARE_RECORD = /^(?:\s|@\S+\s*)*(?:今天|今日|昨天|昨日|前天|本周|这周|上周|最近)?\s*(?:的)?\s*(?:PUBG|吃鸡)?\s*(?:战绩|战况|战报|日报)\s*[?？!！。.~]*\s*$/iu;
 export const BARE_RECORD_TTL_MS = 120_000;
 // Session key -> when the latest inbound message was a bare record request. Module-level on purpose: the plugin is
 // registered several times per process and the dispatch and tool-call hooks may run in different registrations.
@@ -42,15 +42,20 @@ export function isBareRecordRequest(request: unknown): boolean {
 }
 
 /**
- * A bare record request ("今日战绩") names no one, so it is a whole-team request. The model sometimes carries a
- * player from earlier chat into the call instead (10-21 00:08: only SG_LabmemNo008 came back), so for such a turn
- * the subject is forced to the team and any person/player the model added is dropped.
+ * A bare record request ("今日战绩", "昨日战报") names no one, so it is a whole-team request. The model sometimes carries
+ * a player from earlier chat into the call instead (10-21 00:08: only SG_LabmemNo008 came back), so for such a turn the
+ * subject is forced to the team and any person/player the model added is cleared.
+ *
+ * The person fields are set to empty arrays rather than deleted: a host applies a hook's returned params on top of the
+ * model's original params (a shallow merge), so a deleted key would survive and meet `team: true` as an
+ * identity_subject_conflict (observed in the squad group on 11-09: "昨天战绩" came back as that error twice). An empty
+ * array overrides the original value in that merge and counts as "no subject" for a host that replaces the params.
  */
 export function forceTeamScope(params: Record<string, unknown>): Record<string, unknown> | undefined {
-  const named = ['playerIds', 'playerNames', 'personIds'].some((key) => params[key] !== undefined);
+  const present = (value: unknown): boolean => value !== undefined && !(Array.isArray(value) && value.length === 0);
+  const named = ['playerIds', 'playerNames', 'personIds'].some((key) => present(params[key]));
   if (params.team === true && !named) return undefined;
-  const { playerIds: _playerIds, playerNames: _playerNames, personIds: _personIds, ...rest } = params;
-  return { ...rest, team: true };
+  return { ...params, playerIds: [], playerNames: [], personIds: [], team: true };
 }
 
 export type EvidenceVerdict = 'not_applicable' | 'verified' | 'missing_data' | 'wrong_scope';
